@@ -17,6 +17,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>info.picocli</groupId>
+            <artifactId>picocli</artifactId>
+            <version>4.1.1</version>
+        </dependency>
+        <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
             <version>1.12.1</version>
@@ -56,7 +61,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.github.cndjp.godfather.Main</mainClass>
+                            <mainClass>com.github.cndjp.godfather.Godfather</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
