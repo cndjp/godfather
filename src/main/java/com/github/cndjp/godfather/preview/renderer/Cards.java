@@ -71,7 +71,8 @@ public class Cards {
     }
 
     private void write(PrintWriter pw) throws GodfatherEventException {
-        List<Participant> participants = event.getAllParticipantsWithoutCancelled();
+//        List<Participant> participants = event.getAllParticipantsWithoutCancelled();
+        List<Participant> participants = event.getParticipants(ParticipationStatus.WAITLISTED);
         if (participants.size() % 2 == 1) {
             participants.add(new ConnpassParticipant("", "", null, ParticipationStatus.CANCELLED));
         }
