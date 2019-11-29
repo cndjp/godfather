@@ -55,9 +55,6 @@ public class Godfather {
         } catch (GodfatherException e) {
             // TODO log
             e.printStackTrace();
-        } finally {
-            server.stop();
-            Cards.flashCards();
         }
     }
 
