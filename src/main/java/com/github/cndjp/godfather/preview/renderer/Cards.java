@@ -1,4 +1,4 @@
-package com.github.cndjp.godfather.renderer;
+package com.github.cndjp.godfather.preview.renderer;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -13,19 +13,19 @@ import com.github.cndjp.godfather.event.connpass.ConnpassParticipant;
 
 public class Cards {
     /**
-     * Name of a directory where a config parameter file and logs are stored.
+     *
      */
     private static final String CONFIG_DIR_NAME = ".godfather";
     /**
-     * Name of a config parameter file.
+     *
      */
     private static final String OUTPUT_FILE_NAME = "cards.html";
     /**
-     * File object of a directory where a config parameter file and logs are stored.
+     *
      */
     private static final File outputDir = new File(System.getProperty("user.home") + "/" + CONFIG_DIR_NAME);
     /**
-     * File object of a config parameter file.
+     *
      */
     private static final File outputFile = new File(outputDir.getAbsolutePath() + "/" + OUTPUT_FILE_NAME);
     /**
@@ -71,8 +71,7 @@ public class Cards {
     }
 
     private void write(PrintWriter pw) throws GodfatherEventException {
-//        List<Participant> participants = event.getAllParticipantsWithoutCancelled();
-        List<Participant> participants = event.getParticipants(ParticipationStatus.WAITLISTED);
+        List<Participant> participants = event.getAllParticipantsWithoutCancelled();
         if (participants.size() % 2 == 1) {
             participants.add(new ConnpassParticipant("", "", null, ParticipationStatus.CANCELLED));
         }
@@ -115,16 +114,17 @@ public class Cards {
         pw.println("</div>");
     }
 
-    /**
-     * Remove config file form file system.
-     */
     public static void flashCards() {
-        if (outputFile.exists()) {
-            outputFile.delete();
+        if (!outputFile.exists()) {
+            return;
         }
+        outputFile.delete();
     }
 
     public static File getRenderdFile() {
+        if (!outputFile.exists()) {
+            return null;
+        }
         return outputFile;
     }
 
