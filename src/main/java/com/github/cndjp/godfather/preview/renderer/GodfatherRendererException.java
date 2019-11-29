@@ -1,4 +1,4 @@
-package com.github.cndjp.godfather.renderer;
+package com.github.cndjp.godfather.preview.renderer;
 
 import com.github.cndjp.godfather.GodfatherException;
 
