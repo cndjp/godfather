@@ -12,7 +12,8 @@
 
     <packaging>jar</packaging>
     <properties>
-      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <imageNameSuffix>os-unknown</imageNameSuffix>
     </properties>
 
     <dependencies>
@@ -80,28 +81,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.graalvm.nativeimage</groupId>
-                <artifactId>native-image-maven-plugin</artifactId>
-                <version>19.3.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>native-image</goal>
-                        </goals>
-                        <phase>package</phase>
-                    </execution>
-                </executions>
-                <configuration>
-                    <skip>false</skip>
-                    <buildArgs>
-                        --no-fallback
-                        --report-unsupported-elements-at-runtime
-                        --enable-https
-                    </buildArgs>
-                    <imageName>gf</imageName>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
                 <version>3.2</version>
@@ -116,6 +95,51 @@
                 </configuration>
             </plugin>
         </plugins>
-     </build>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>linux-amd64</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                    <name>linux</name>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <imageNameSuffix>linux-amd64</imageNameSuffix>
+            </properties>
+        </profile>
+        <profile>
+            <id>native-image</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.nativeimage</groupId>
+                        <artifactId>native-image-maven-plugin</artifactId>
+                        <version>19.3.0</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>native-image</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <skip>false</skip>
+                            <buildArgs>
+                                --no-fallback
+                                --report-unsupported-elements-at-runtime
+                                --enable-https
+                            </buildArgs>
+                            <imageName>gf-${imageNameSuffix}</imageName>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
