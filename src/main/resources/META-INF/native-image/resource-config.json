@@ -1,0 +1,6 @@
+{
+  "resources":[
+    {"pattern":"include.js"}, 
+    {"pattern":"index.html"}
+  ]
+}

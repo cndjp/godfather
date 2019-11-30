@@ -41,15 +41,15 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.5</version>
                 <configuration>
-                    <source>8</source>
-                    <target>8</target>
-                    <!-- <annotationProcessorPaths>
+                    <source>11</source>
+                    <target>11</target>
+                    <annotationProcessorPaths>
                         <path>
                             <groupId>info.picocli</groupId>
                             <artifactId>picocli-codegen</artifactId>
-                            <version>4.0.2</version>
+                            <version>4.1.0</version>
                         </path>
-                    </annotationProcessorPaths> -->
+                    </annotationProcessorPaths>
                     <compilerArgs>
                         <arg>-Aproject=${groupId}/${artifactId}</arg>
                     </compilerArgs>
@@ -78,6 +78,28 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.graalvm.nativeimage</groupId>
+                <artifactId>native-image-maven-plugin</artifactId>
+                <version>19.3.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>native-image</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <skip>false</skip>
+                    <buildArgs>
+                        --no-fallback
+                        --report-unsupported-elements-at-runtime
+                        --enable-https
+                    </buildArgs>
+                    <imageName>gf</imageName>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
