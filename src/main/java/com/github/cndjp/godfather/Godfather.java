@@ -26,7 +26,7 @@ public class Godfather {
     @CommandLine.Option(names = {"-h", "--help"}, usageHelp = true, description = "display this help message")
     private boolean usageHelpRequested = false;
 
-    public static void main(String[] args) {
+    public static void exec(String[] args) {
         Godfather godfather = new Godfather();
         CommandLine commandLine = new CommandLine(godfather);
         commandLine.parseArgs(args);
