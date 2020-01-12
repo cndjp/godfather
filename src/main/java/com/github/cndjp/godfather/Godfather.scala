@@ -3,7 +3,7 @@ package com.github.cndjp.godfather
 import java.net.URL
 import com.github.cndjp.godfather.config.GodfatherCliConfig
 import com.github.cndjp.godfather.event.Event
-import com.github.cndjp.godfather.exception.GodfatherException.{GeneralGodfatherException, GodfatherEventException, GodfatherRendererException}
+import com.github.cndjp.godfather.exception.GodfatherException.{GodfatherGeneralException, GodfatherEventException, GodfatherRendererException}
 import com.github.cndjp.godfather.preview.PreviewServer
 import com.github.cndjp.godfather.preview.renderer.Cards
 import com.typesafe.scalalogging.LazyLogging
@@ -37,7 +37,7 @@ object Godfather extends App with LazyLogging {
         })
         server.start(8080);
       } catch {
-        case GeneralGodfatherException(err) => logger.error("一般エラー", err)
+        case GodfatherGeneralException(err) => logger.error("一般エラー", err)
         case GodfatherEventException(err) => logger.error("イベントエラー", err)
         case GodfatherRendererException(err) => logger.error("レンダリングエラー", err)
         case e: Exception => logger.error(s"予期せぬエラー: ${e.getStackTrace}")
