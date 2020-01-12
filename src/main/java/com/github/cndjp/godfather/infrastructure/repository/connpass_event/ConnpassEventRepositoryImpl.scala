@@ -109,8 +109,9 @@ object ConnpassEventRepositoryImpl {
                                              else IMAGE_SOURCE_DEFAULT
 
                                            userCounter += 1
-                                           System.out.println(displayName + "(" + items._1
-                                             .toString() + "): " + userCounter + "/" + users.size())
+                                           System.out.println(
+                                             displayName + "(" + items._1.getName + "): " + userCounter + "/" + users
+                                               .size())
                                            ConnpassParticipant(
                                              UUID.randomUUID().toString,
                                              displayName,
