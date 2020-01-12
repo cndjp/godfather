@@ -37,9 +37,10 @@ object Godfather extends App with LazyLogging {
         })
         server.start(8080);
       } catch {
-        case GeneralGodfatherException(err) => logger.error("一般エラー", err);
-        case GodfatherEventException(err) => logger.error("イベントエラー", err);
-        case GodfatherRendererException(err) => logger.error("レンダリングエラー", err);
+        case GeneralGodfatherException(err) => logger.error("一般エラー", err)
+        case GodfatherEventException(err) => logger.error("イベントエラー", err)
+        case GodfatherRendererException(err) => logger.error("レンダリングエラー", err)
+        case e: Exception => logger.error(s"予期せぬエラー: ${e.getStackTrace}")
         case _ => logger.error("予期せぬエラー")
       }
     }
