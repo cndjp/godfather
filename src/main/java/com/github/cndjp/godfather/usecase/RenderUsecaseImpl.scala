@@ -1,19 +1,31 @@
 package com.github.cndjp.godfather.usecase
-import better.files.File
+import java.io.PrintWriter
+import java.nio.file.{Files, Path, Paths}
+
 import cats.effect.IO
-import cats.syntax.all._
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
-import com.github.cndjp.godfather.domain.participant.{
-  ConnpassParticipant,
-  Participant,
-  ParticipantStatus
-}
+import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import com.github.cndjp.godfather.domain.repository.ConnpassEventRepository
 
+import scala.io.Source
+
 class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository) extends RenderUsecase {
-  override def render(event: ConnpassEvent): IO[String] =
+  private[this] val resourcesPath = "./src/main/resources"
+
+  override def exec(event: ConnpassEvent): IO[String] =
     for {
-      //tmpFile <- IO(File.newTemporaryFile(suffix = "html"))
+      cardHTMLPath <- IO(Paths.get(s"$resourcesPath/cards.html"))
+      _ <- if (Files.exists(cardHTMLPath)) IO.unit else render(event, cardHTMLPath)
+      indexHTML <- IO {
+                    val indexBuf = Source.fromFile(s"$resourcesPath/index.html")
+                    try indexBuf.mkString
+                    finally indexBuf.close()
+                  }
+    } yield indexHTML
+
+  private[this] def render(event: ConnpassEvent, cardHTMLPath: Path): IO[Unit] =
+    for {
+      cardHTML <- IO { Files.createFile(cardHTMLPath) }
       participants <- connpassEventRepository.getParticipants(event)
       checkedParticipants <- IO.pure {
                               if (participants.size % 2 == 1) {
@@ -25,9 +37,13 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository) extend
                               } else participants
                             }
       title <- connpassEventRepository.getEventTitle(event)
-      //file <- IO(tmpFile.write(participantList2String(title, checkedParticipants))) *> IO(tmpFile.)
       output <- IO(participantList2String(title, checkedParticipants))
-    } yield output
+      _ <- IO {
+            val pw = new PrintWriter(cardHTML.toFile.getPath)
+            try pw.write(output)
+            finally pw.close()
+          }
+    } yield ()
 
   private[this] def participantList2String(title: String,
                                            input: Seq[ConnpassParticipant]): String = {
@@ -45,7 +61,7 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository) extend
       result :+= """    </div> """
       result :+= """    <div class="row align-items-center border"> """
       result :+= """        <div class="col-md-2"> """
-      result :+= s"            <img src=${input(counter).imageURL}"
+      result :+= """            <img src=" """ + input(counter).imageURL + "\""
       result :+= """                 class="rounded" """
       result :+= """                 width="160" height="160" """
       result :+= """                 style="margin:20px 5px; object-fit:cover"/> """
@@ -53,8 +69,8 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository) extend
       result :+= """        <div class="col-md-4 text-dark"> """
       result :+= """            <h2 class="text-center">""" + input(counter).name + "</h2>"
       result :+= """        </div> """
-      result :+= """        <div class="col-md-2 border-left" """
-      result :+= s"            <img src=${input(counter).imageURL}"
+      result :+= """        <div class="col-md-2 border-left"> """
+      result :+= """            <img src=" """ + input(counter).imageURL + "\""
       result :+= """                 class="rounded" """
       result :+= """                 width="160" height="160" """
       result :+= """                 style="margin:20px 5px; object-fit:cover"/> """
@@ -69,6 +85,6 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository) extend
       counter += 2
     }
     result :+= "</div>"
-    result.mkString("""\n""")
+    result.mkString("\n")
   }
 }
