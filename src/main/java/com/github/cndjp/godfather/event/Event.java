@@ -1,6 +1,7 @@
 package com.github.cndjp.godfather.event;
 
 import com.github.cndjp.godfather.event.connpass.ConnpassEvent;
+import com.github.cndjp.godfather.exception.GodfatherException.GodfatherEventException;
 
 import java.net.URL;
 import java.util.List;

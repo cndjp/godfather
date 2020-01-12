@@ -4,9 +4,9 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.github.cndjp.godfather.GodfatherException;
+import com.github.cndjp.godfather.exception.GodfatherException.GodfatherEventException;
+import com.github.cndjp.godfather.exception.GodfatherException.GodfatherRendererException;
 import com.github.cndjp.godfather.event.Event;
-import com.github.cndjp.godfather.event.GodfatherEventException;
 import com.github.cndjp.godfather.event.Participant;
 import com.github.cndjp.godfather.event.ParticipationStatus;
 import com.github.cndjp.godfather.event.connpass.ConnpassParticipant;
@@ -47,7 +47,7 @@ public class Cards {
         return this;
     }
 
-    public void render() throws GodfatherException {
+    public void render() throws GodfatherRendererException {
         if (this.event == null) {
             throw new GodfatherRendererException("insufficient parameter.");
         }
@@ -61,8 +61,8 @@ public class Cards {
             pw = new PrintWriter(new BufferedWriter(file));
             write(pw);
             pw.close();
-        } catch (IOException e) {
-            throw new GodfatherRendererException(e.getMessage());
+        } catch (IOException | GodfatherEventException e) {
+            throw new GodfatherRendererException("insufficient parameter.");
         } finally {
             if (pw != null) {
                 pw.close();
