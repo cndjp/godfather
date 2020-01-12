@@ -33,16 +33,6 @@ object Godfather extends App with LazyLogging {
   OParser.parse(parser, args, GodfatherCliConfig()) match {
     case Some(config) => {
       logger.info(s"レンダリングするイベントURL: ${config.eventURL}")
-//      val server = PreviewServer.getInstance();
-//      try {
-//        new Cards().event(Event.getEvent(config.eventURL)).render();
-//        Runtime.getRuntime.addShutdownHook(new Thread {
-//          () -> {
-//            server.stop();
-//            Cards.flashCards();
-//          }
-//        })
-//        server.start(8080);
       val policy = Cors.Policy(
         allowsOrigin = _ => Some("*"),
         allowsMethods = _ => Some(Seq("GET", "POST", "PUT", "PATCH", "OPTIONS")),
@@ -64,13 +54,6 @@ object Godfather extends App with LazyLogging {
             .andThen(api.toService)
         )
       )
-//      } catch {
-//        case GodfatherGeneralException(err)  => logger.error("一般エラー", err)
-//        case GodfatherEventException(err)    => logger.error("イベントエラー", err)
-//        case GodfatherRendererException(err) => logger.error("レンダリングエラー", err)
-//        case e: Throwable                    => logger.error(s"予期せぬエラー: ${e.getStackTrace}")
-//        case _                               => logger.error("予期せぬエラー")
-//      }
     }
     case _ =>
       logger.error("コマンドラインのパースに失敗しました")
