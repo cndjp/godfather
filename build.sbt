@@ -24,6 +24,10 @@ libraryDependencies ++= Seq(
   "com.softwaremill.macwire" %% "macrosakka" % "2.3.1" % "provided",
   "com.softwaremill.macwire" %% "util" % "2.3.1",
   "com.softwaremill.macwire" %% "proxy" % "2.3.1",
-  "com.github.pathikrit" %% "better-files" % "3.7.1",
+  "com.github.finagle" %% "finchx-circe" % "0.29.0",
+  "io.circe" %% "circe-core" % "0.10.0",
+  "io.circe" %% "circe-generic" % "0.10.0",
+  "io.circe" %% "circe-parser" % "0.10.0",
+    "com.github.pathikrit" %% "better-files" % "3.7.1",
   "com.beachape" %% "enumeratum" % "1.5.13"
 )
