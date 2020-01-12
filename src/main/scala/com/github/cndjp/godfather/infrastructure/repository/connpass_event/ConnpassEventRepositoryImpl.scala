@@ -9,7 +9,6 @@ import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import org.jsoup.Jsoup
 import org.jsoup.select.Elements
-import cats.syntax.all._
 import com.github.cndjp.godfather.domain.participant.ParticipantStatus.{
   CANCELLED,
   ORGANIZER,
