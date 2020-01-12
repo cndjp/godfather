@@ -3,7 +3,11 @@ package com.github.cndjp.godfather
 import java.net.URL
 import com.github.cndjp.godfather.config.GodfatherCliConfig
 import com.github.cndjp.godfather.event.Event
-import com.github.cndjp.godfather.exception.GodfatherException.{GodfatherGeneralException, GodfatherEventException, GodfatherRendererException}
+import com.github.cndjp.godfather.exception.GodfatherException.{
+  GodfatherGeneralException,
+  GodfatherEventException,
+  GodfatherRendererException
+}
 import com.github.cndjp.godfather.preview.PreviewServer
 import com.github.cndjp.godfather.preview.renderer.Cards
 import com.typesafe.scalalogging.LazyLogging
@@ -11,6 +15,7 @@ import scopt.OParser
 
 object Godfather extends App with LazyLogging {
   val builder = OParser.builder[GodfatherCliConfig]
+
   val parser = {
     import builder._
     OParser.sequence(
@@ -29,7 +34,7 @@ object Godfather extends App with LazyLogging {
       val server = PreviewServer.getInstance();
       try {
         new Cards().event(Event.getEvent(config.eventURL)).render();
-        Runtime.getRuntime.addShutdownHook(new Thread{
+        Runtime.getRuntime.addShutdownHook(new Thread {
           () -> {
             server.stop();
             Cards.flashCards();
@@ -37,11 +42,11 @@ object Godfather extends App with LazyLogging {
         })
         server.start(8080);
       } catch {
-        case GodfatherGeneralException(err) => logger.error("一般エラー", err)
-        case GodfatherEventException(err) => logger.error("イベントエラー", err)
+        case GodfatherGeneralException(err)  => logger.error("一般エラー", err)
+        case GodfatherEventException(err)    => logger.error("イベントエラー", err)
         case GodfatherRendererException(err) => logger.error("レンダリングエラー", err)
-        case e: Exception => logger.error(s"予期せぬエラー: ${e.getStackTrace}")
-        case _ => logger.error("予期せぬエラー")
+        case e: Throwable                    => logger.error(s"予期せぬエラー: ${e.getStackTrace}")
+        case _                               => logger.error("予期せぬエラー")
       }
     }
     case _ =>

@@ -16,14 +16,30 @@ import com.github.cndjp.godfather.domain.participant.ParticipantStatus.{
   PARTICIPANT,
   WAITLISTED
 }
+import com.github.cndjp.godfather.domain.repository.ConnpassEventRepository
 import com.github.cndjp.godfather.exception.GodfatherException.GodfatherGeneralException
+import com.typesafe.scalalogging.LazyLogging
 import org.jsoup.nodes.Element
 
-object ConnpassEventRepositoryImpl {
+class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLogging {
   private[this] val IMAGE_SOURCE_DEFAULT = new URL(
     "https://connpass.com/static/img/common/user_no_image_180.png")
 
-  def getParticipants(event: ConnpassEvent): IO[Seq[ConnpassParticipant]] = {
+  override def getEventTitle(event: ConnpassEvent): IO[String] =
+    for {
+      result <- try {
+                 IO(
+                   Jsoup
+                     .connect(event.url.toString())
+                     .get()
+                     .select("meta[itemprop=name]")
+                     .attr("content"))
+               } catch {
+                 case e: IOException => IO.raiseError(e)
+               }
+    } yield result
+
+  override def getParticipants(event: ConnpassEvent): IO[Seq[ConnpassParticipant]] = {
     var elements = Seq[(ParticipantStatus, Elements)]()
     for {
       document <- try {
@@ -31,7 +47,7 @@ object ConnpassEventRepositoryImpl {
                  } catch {
                    case e: IOException => IO.raiseError(e)
                  }
-      _ <- IO.pure(ParticipantStatus.values.foreach {
+      _ <- IO.pure(ParticipantStatus.values.filterNot(_ == CANCELLED).foreach {
             case ORGANIZER =>
               elements :+= (ORGANIZER, document.select("div[class=concerned_area mb_30]"))
             case PARTICIPANT =>
@@ -39,8 +55,8 @@ object ConnpassEventRepositoryImpl {
                 "div[class=participation_table_area mb_20]"))
             case WAITLISTED =>
               elements :+= (WAITLISTED, document.select("div[class=waitlist_table_area mb_20]"))
-            case CANCELLED =>
-              elements :+= (CANCELLED, document.select("div[class=cancelled_table_area mb_20]"))
+//          case CANCELLED =>
+//              elements :+= (CANCELLED, document.select("div[class=cancelled_table_area mb_20]"))
             case _ => IO.raiseError(GodfatherGeneralException("想定外のParticipantStatusを検知しました"))
           })
       result <- element2Participants(elements)
@@ -109,7 +125,7 @@ object ConnpassEventRepositoryImpl {
                                              else IMAGE_SOURCE_DEFAULT
 
                                            userCounter += 1
-                                           System.out.println(
+                                           logger.info(
                                              displayName + "(" + items._1.getName + "): " + userCounter + "/" + users
                                                .size())
                                            ConnpassParticipant(
@@ -124,6 +140,4 @@ object ConnpassEventRepositoryImpl {
                    } yield appendedInitSeq
                }
     } yield result
-
-  def getParticipantsWithoutCancelled: Seq[ConnpassParticipant] = ???
 }
