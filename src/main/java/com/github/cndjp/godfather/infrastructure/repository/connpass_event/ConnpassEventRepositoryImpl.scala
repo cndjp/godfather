@@ -30,7 +30,7 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
       result <- try {
                  IO(
                    Jsoup
-                     .connect(event.url.toString())
+                     .connect(event.url.toString)
                      .get()
                      .select("meta[itemprop=name]")
                      .attr("content"))

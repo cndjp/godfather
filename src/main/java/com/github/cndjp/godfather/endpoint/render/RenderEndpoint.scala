@@ -14,15 +14,17 @@ import com.typesafe.scalalogging.LazyLogging
 import io.finch.{Endpoint, _}
 
 object RenderEndpoint extends IOEndpointOps with LazyLogging with GodfatherInterface {
-  def create = execRender
+  def create(url: URL) = execRender(url)
 
-  private def execRender: Endpoint[IO, Buf] =
-    get(rootPath :: "rendered") {
+  private def execRender(url: URL): Endpoint[IO, Buf] =
+    get("render") {
       renderUsecase
-        .render(ConnpassEvent(new URL("")))
+        .exec(ConnpassEvent(url))
         .attempt
         .map {
-          case Left(err)   => UnprocessableEntity(GodfatherGeneralException(err.getMessage))
+          case Left(err) =>
+            logger.error("render", err)
+            UnprocessableEntity(GodfatherGeneralException(err.getMessage))
           case Right(html) => Ok(Buf.Utf8(html))
         }
     }
