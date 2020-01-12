@@ -1,6 +1,7 @@
 package com.github.cndjp.godfather.usecase
 import better.files.File
 import cats.effect.IO
+import cats.syntax.all._
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.domain.participant.{
   ConnpassParticipant,
@@ -10,9 +11,9 @@ import com.github.cndjp.godfather.domain.participant.{
 import com.github.cndjp.godfather.domain.repository.ConnpassEventRepository
 
 class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository) extends RenderUsecase {
-  override def render(event: ConnpassEvent): IO[Unit] =
+  override def render(event: ConnpassEvent): IO[String] =
     for {
-      tmpFile <- IO(File.newTemporaryFile())
+      //tmpFile <- IO(File.newTemporaryFile(suffix = "html"))
       participants <- connpassEventRepository.getParticipants(event)
       checkedParticipants <- IO.pure {
                               if (participants.size % 2 == 1) {
@@ -24,8 +25,9 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository) extend
                               } else participants
                             }
       title <- connpassEventRepository.getEventTitle(event)
-      _ <- IO.pure(tmpFile.write(participantList2String(title, checkedParticipants)))
-    } yield ()
+      //file <- IO(tmpFile.write(participantList2String(title, checkedParticipants))) *> IO(tmpFile.)
+      output <- IO(participantList2String(title, checkedParticipants))
+    } yield output
 
   private[this] def participantList2String(title: String,
                                            input: Seq[ConnpassParticipant]): String = {
