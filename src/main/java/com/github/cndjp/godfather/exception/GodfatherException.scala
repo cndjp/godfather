@@ -3,7 +3,7 @@ package com.github.cndjp.godfather.exception
 sealed abstract class GodfatherException(why: String) extends Exception(why)
 
 object GodfatherException {
-  case class GeneralGodfatherException(why: String)
+  case class GodfatherGeneralException(why: String)
     extends GodfatherException(s"予測されないエラーが発生しました: $why")
 
   case class GodfatherEventException(why: String)
