@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.github.cndjp.godfather.event.Participant;
 import com.github.cndjp.godfather.event.Event;
-import com.github.cndjp.godfather.event.GodfatherEventException;
+import com.github.cndjp.godfather.exception.GodfatherException.GodfatherEventException;
 import com.github.cndjp.godfather.event.ParticipationStatus;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
