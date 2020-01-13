@@ -70,37 +70,7 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
                  (init, items) =>
                    for {
                      initSeq <- init
-                     _ <- IO {
-                           items._2.toArray(Array[Element]()).foreach { item =>
-                             val paginatedUserListLink = item.select("tr.empty td[colspan=2] a")
-                             if (paginatedUserListLink.isEmpty)
-                               userTableElementsConsideringPagination.add(item)
-                             else {
-                               val paginatedUserListUrl = paginatedUserListLink.first().attr("href")
-                               if (paginatedUserListUrl == null || !paginatedUserListUrl.contains(
-                                     "/ptype/")) userTableElementsConsideringPagination.add(item)
-                               else {
-                                 val page1 = Jsoup.connect(paginatedUserListUrl).get()
-                                 userTableElementsConsideringPagination.add(page1)
-                                 val participantsCount = page1
-                                   .select("span.participants_count")
-                                   .text()
-                                   .replace("人", "")
-                                   .toInt
-                                 val lastPage = participantsCount / 100 + 1
-                                 var i = 2
-                                 while (i <= lastPage) {
-                                   val pageX =
-                                     Jsoup.connect(paginatedUserListUrl + "?page=" + i).get()
-                                   userTableElementsConsideringPagination.add(pageX)
-                                   i += 1
-                                 }
-                               }
-                             }
-                           }
-                         }
-                     users <- IO.pure(
-                               userTableElementsConsideringPagination.select("td.user .user_info"))
+                     users <- element2Users(items._2)
                      participant <- IO {
                                      users.toArray(Array[Element]()).map {
                                        var userCounter = 0
@@ -139,4 +109,39 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
                    } yield appendedInitSeq
                }
     } yield result
+
+  private[this] def element2Users(elems: Elements): IO[Elements] =
+    for {
+      userTableElementsConsideringPagination <- IO.pure(new Elements())
+      _ <- IO {
+            elems.toArray(Array[Element]()).foreach { item =>
+              val paginatedUserListLink = item.select("tr.empty td[colspan=2] a")
+              if (paginatedUserListLink.isEmpty)
+                userTableElementsConsideringPagination.add(item)
+              else {
+                val paginatedUserListUrl = paginatedUserListLink.first().attr("href")
+                if (paginatedUserListUrl == null || !paginatedUserListUrl.contains("/ptype/"))
+                  userTableElementsConsideringPagination.add(item)
+                else {
+                  val page1 = Jsoup.connect(paginatedUserListUrl).get()
+                  userTableElementsConsideringPagination.add(page1)
+                  val participantsCount = page1
+                    .select("span.participants_count")
+                    .text()
+                    .replace("人", "")
+                    .toInt
+                  val lastPage = participantsCount / 100 + 1
+                  var i = 2
+                  while (i <= lastPage) {
+                    val pageX =
+                      Jsoup.connect(paginatedUserListUrl + "?page=" + i).get()
+                    userTableElementsConsideringPagination.add(pageX)
+                    i += 1
+                  }
+                }
+              }
+            }
+          }
+      users <- IO.pure(userTableElementsConsideringPagination.select("td.user .user_info"))
+    } yield users
 }
