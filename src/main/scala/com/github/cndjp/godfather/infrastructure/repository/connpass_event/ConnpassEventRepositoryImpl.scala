@@ -65,48 +65,45 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
   private[this] def element2Participants(
       input: Seq[(ParticipantStatus, Elements)]): IO[Seq[ConnpassParticipant]] =
     for {
-      result <- input.foldLeft(IO(Seq[ConnpassParticipant]())) {
-                 val userTableElementsConsideringPagination = new Elements()
-                 (init, items) =>
-                   for {
-                     initSeq <- init
-                     users <- element2Users(items._2)
-                     participant <- IO {
-                                     users.toArray(Array[Element]()).map {
-                                       var userCounter = 0
-                                       user =>
-                                         {
-                                           val displayName = user.select("p.display_name a").text()
-                                           val userHome =
-                                             Jsoup
-                                               .connect(
-                                                 user.select("p.display_name a").attr("href"))
-                                               .get()
-                                           val images = userHome.select(
-                                             "div[id=side_area] div[class=mb_20 text_center] a.image_link")
-                                           val imageSource =
-                                             if (!images.isEmpty)
-                                               images
-                                                 .toArray(Array[Element]())
-                                                 .find(_.attr("href").contains("/user/"))
-                                                 .map(image => new URL(image.attr("href")))
-                                                 .getOrElse(IMAGE_SOURCE_DEFAULT)
-                                             else IMAGE_SOURCE_DEFAULT
+      result <- input.foldLeft(IO(Seq[ConnpassParticipant]())) { (init, items) =>
+                 for {
+                   initSeq <- init
+                   users <- element2Users(items._2)
+                   participant <- IO {
+                                   users.toArray(Array[Element]()).map {
+                                     var userCounter = 0
+                                     user =>
+                                       {
+                                         val displayName = user.select("p.display_name a").text()
+                                         val userHome =
+                                           Jsoup
+                                             .connect(user.select("p.display_name a").attr("href"))
+                                             .get()
+                                         val images = userHome.select(
+                                           "div[id=side_area] div[class=mb_20 text_center] a.image_link")
+                                         val imageSource =
+                                           if (!images.isEmpty)
+                                             images
+                                               .toArray(Array[Element]())
+                                               .find(_.attr("href").contains("/user/"))
+                                               .map(image => new URL(image.attr("href")))
+                                               .getOrElse(IMAGE_SOURCE_DEFAULT)
+                                           else IMAGE_SOURCE_DEFAULT
 
-                                           userCounter += 1
-                                           logger.info(
-                                             displayName + "(" + items._1.getName + "): " + userCounter + "/" + users
-                                               .size())
-                                           ConnpassParticipant(
-                                             UUID.randomUUID().toString,
-                                             displayName,
-                                             imageSource,
-                                             items._1)
-                                         }
-                                     }
+                                         userCounter += 1
+                                         logger.info(
+                                           displayName + "(" + items._1.getName + "): " + userCounter + "/" + users
+                                             .size())
+                                         ConnpassParticipant(
+                                           UUID.randomUUID().toString,
+                                           displayName,
+                                           imageSource,
+                                           items._1)
+                                       }
                                    }
-                     appendedInitSeq <- IO(initSeq ++ participant.toSeq)
-                   } yield appendedInitSeq
+                                 }
+                   appendedInitSeq <- IO(initSeq ++ participant.toSeq)
+                 } yield appendedInitSeq
                }
     } yield result
 
