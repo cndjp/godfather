@@ -70,16 +70,16 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository) extend
       result :+= """            <h2 class="text-center">""" + input(counter).name + "</h2>"
       result :+= """        </div> """
       result :+= """        <div class="col-md-2 border-left"> """
-      result :+= """            <img src=" """ + input(counter).imageURL + "\""
+      result :+= """            <img src=" """ + input(counter + 1).imageURL + "\""
       result :+= """                 class="rounded" """
       result :+= """                 width="160" height="160" """
       result :+= """                 style="margin:20px 5px; object-fit:cover"/> """
       result :+= """        </div> """
       result :+= """        <div class="col-md-4 text-dark"> """
-      result :+= """            <h2 class="text-center">""" + input(counter).name + "</h2>"
+      result :+= """            <h2 class="text-center">""" + input(counter + 1).name + "</h2>"
       result :+= """        </div> """
       result :+= """    </div> """
-      if ((counter + 2) % 10 == 0) {
+      if ((counter + 1 + 1) % 10 == 0) {
         result :+= "    <div style=\"page-break-before:always\" />"
       }
       counter += 2
