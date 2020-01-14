@@ -1,71 +1,22 @@
-package com.github.cndjp.godfather.infrastructure.repository.connpass_event
+package com.github.cndjp.godfather.infrastructure.repository.participant
 
 import java.io.IOException
 import java.net.URL
 import java.util.UUID
 
-import cats.syntax.all._
 import cats.effect.IO
-import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
-import org.jsoup.Jsoup
-import org.jsoup.select.Elements
-import com.github.cndjp.godfather.domain.participant.ParticipantStatus.{
-  CANCELLED,
-  ORGANIZER,
-  PARTICIPANT,
-  WAITLISTED
-}
-import com.github.cndjp.godfather.domain.repository.ConnpassEventRepository
+import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
 import com.github.cndjp.godfather.domain.user_elements.UserElements
-import com.github.cndjp.godfather.exception.GodfatherException.{
-  GodfatherGeneralException,
-  GodfatherRendererException
-}
+import com.github.cndjp.godfather.exception.GodfatherException.GodfatherRendererException
 import com.typesafe.scalalogging.LazyLogging
+import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import org.jsoup.select.Elements
 
-class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLogging {
+class ConnpassParticipantRepositoryImpl extends ConnpassParticipantRepository with LazyLogging {
   private[this] val IMAGE_SOURCE_DEFAULT = new URL(
     "https://connpass.com/static/img/common/user_no_image_180.png")
-
-  // イベントのタイトルを持ってくる
-  override def getEventTitle(event: ConnpassEvent): IO[String] =
-    for {
-      result <- try IO(
-                 Jsoup
-                   .connect(event.url.toString)
-                   .get()
-                   .select("meta[itemprop=name]")
-                   .attr("content"))
-               catch {
-                 case e: IOException => IO.raiseError(GodfatherRendererException(e.getMessage))
-               }
-    } yield result
-
-  // コンパスのイベントURLから登録者を持ってくる
-  override def getParticipants(event: ConnpassEvent): IO[Seq[ConnpassParticipant]] = {
-    var elements = Seq[(ParticipantStatus, Elements)]()
-    for {
-      document <- try IO(Jsoup.connect(event.getParticipantsListUrl).get())
-                 catch {
-                   case e: IOException => IO.raiseError(GodfatherRendererException(e.getMessage))
-                 }
-      _ <- IO.pure(ParticipantStatus.values.filterNot(_ == CANCELLED).foreach {
-            case ORGANIZER =>
-              elements :+= (ORGANIZER, document.select("div[class=concerned_area mb_30]"))
-            case PARTICIPANT =>
-              elements :+= (PARTICIPANT, document.select(
-                "div[class=participation_table_area mb_20]"))
-            case WAITLISTED =>
-              elements :+= (WAITLISTED, document.select("div[class=waitlist_table_area mb_20]"))
-//          case CANCELLED =>
-//              elements :+= (CANCELLED, document.select("div[class=cancelled_table_area mb_20]"))
-            case _ => IO.raiseError(GodfatherGeneralException("想定外のParticipantStatusを検知しました"))
-          })
-      result <- element2Participants(elements)
-    } yield result
-  }
 
   // 登録者リストをパースしてcards.htmlに書き込むHTMLの文字列を返す
   override def parseParticipantList(title: String, input: Seq[ConnpassParticipant]): IO[String] =
@@ -127,7 +78,7 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
     } yield (result :+ "</div>").mkString("\n")
 
   // HTMLのエレメントから、登録者リストを返す
-  private[this] def element2Participants(
+  override def element2Participants(
       input: Seq[(ParticipantStatus, Elements)]): IO[Seq[ConnpassParticipant]] =
     for {
       result <- input.foldLeft(IO(Seq[ConnpassParticipant]())) { (init, items) =>
