@@ -2,11 +2,9 @@ package com.github.cndjp.godfather.infrastructure.repository.connpass_event
 
 import java.io.IOException
 import java.net.URL
-import java.util.{Random, UUID}
-import java.util.concurrent.Executors
-
+import java.util.UUID
 import cats.syntax.all._
-import cats.effect.{ContextShift, IO}
+import cats.effect.IO
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import org.jsoup.Jsoup
@@ -24,8 +22,6 @@ import com.github.cndjp.godfather.exception.GodfatherException.{
 }
 import com.typesafe.scalalogging.LazyLogging
 import org.jsoup.nodes.Element
-
-import scala.concurrent.ExecutionContext
 
 class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLogging {
   private[this] val IMAGE_SOURCE_DEFAULT = new URL(
@@ -66,6 +62,64 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
       result <- element2Participants(elements)
     } yield result
   }
+
+  override def participantList2String(title: String, input: Seq[ConnpassParticipant]): IO[String] =
+    for {
+      adjust <- IO {
+                 if (input.size % 2 == 1)
+                   input :+ ConnpassParticipant("", "", null, ParticipantStatus.CANCELLED);
+                 else input
+               }
+//      factory <- (0 to (adjust.size / 2))
+//                  .foldLeft(IO.pure(Seq[(ConnpassParticipant, ConnpassParticipant)]())) {
+//                    (init, counter) =>
+//                      for {
+//                        initSeq <- init
+//                        appended <- IO(initSeq ++ Seq((adjust(counter), adjust(counter + 1))))
+//                      } yield appended
+//                  }
+      result <- IO {
+                 var init = Seq[String]()
+                 var counter = 0
+                 init :+= """<div class="container border">"""
+                 while (counter < adjust.size) {
+                   init :+= """    <div class="row align-items-center border"> """
+                   init :+= """        <div class="col-md-6 py-2 bg-info text-light"> """
+                   init :+= """            <h4 class="text-center">""" + title + "</h4>"
+                   init :+= """        </div> """
+                   init :+= """        <div class="col-md-6 py-2 bg-info text-light border-left"> """
+                   init :+= """            <h4 class="text-center">""" + title + "</h4>"
+                   init :+= """        </div> """
+                   init :+= """    </div> """
+                   init :+= """    <div class="row align-items-center border"> """
+                   init :+= """        <div class="col-md-2"> """
+                   init :+= """            <img src=" """ + adjust(counter).imageURL + "\""
+                   init :+= """                 class="rounded" """
+                   init :+= """                 width="160" height="160" """
+                   init :+= """                 style="margin:20px 5px; object-fit:cover"/> """
+                   init :+= """        </div> """
+                   init :+= """        <div class="col-md-4 text-dark"> """
+                   init :+= """            <h2 class="text-center">""" + adjust(counter).name + "</h2>"
+                   init :+= """        </div> """
+                   init :+= """        <div class="col-md-2 border-left"> """
+                   init :+= """            <img src=" """ + adjust(counter + 1).imageURL + "\""
+                   init :+= """                 class="rounded" """
+                   init :+= """                 width="160" height="160" """
+                   init :+= """                 style="margin:20px 5px; object-fit:cover"/> """
+                   init :+= """        </div> """
+                   init :+= """        <div class="col-md-4 text-dark"> """
+                   init :+= """            <h2 class="text-center">""" + adjust(counter + 1).name + "</h2>"
+                   init :+= """        </div> """
+                   init :+= """    </div> """
+                   if ((counter + 1 + 1) % 10 == 0) {
+                     init :+= "    <div style=\"page-break-before:always\" />"
+                   }
+                   counter += 2
+                 }
+                 init :+= "</div>"
+                 init
+               }
+    } yield result.mkString("\n")
 
   private[this] def element2Participants(
       input: Seq[(ParticipantStatus, Elements)]): IO[Seq[ConnpassParticipant]] =

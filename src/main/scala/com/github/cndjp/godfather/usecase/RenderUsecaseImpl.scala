@@ -1,15 +1,11 @@
 package com.github.cndjp.godfather.usecase
 import java.io.PrintWriter
 import java.nio.file.{Files, Path, Paths}
-import java.util.Random
-import java.util.concurrent.Executors
 
-import cats.effect.{ContextShift, IO}
+import cats.effect.IO
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import com.github.cndjp.godfather.domain.repository.ConnpassEventRepository
-
-import scala.concurrent.ExecutionContext
 import scala.io.Source
 
 class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository) extends RenderUsecase {
@@ -27,61 +23,9 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository) extend
     for {
       cardHTML <- IO { Files.createFile(cardHTMLPath) }
       participants <- connpassEventRepository.getParticipants(event)
-      checkedParticipants <- IO.pure {
-                              if (participants.size % 2 == 1) {
-                                participants :+ ConnpassParticipant(
-                                  "",
-                                  "",
-                                  null,
-                                  ParticipantStatus.CANCELLED);
-                              } else participants
-                            }
       title <- connpassEventRepository.getEventTitle(event)
-      output <- IO(participantList2String(title, checkedParticipants))
-      _ <- IO(new PrintWriter(cardHTML.toFile.getPath)).bracket(pw => IO(pw.write(output)))(pw =>
-            IO(pw.close()))
+      output <- connpassEventRepository.participantList2String(title, participants)
+      _ <- IO(new PrintWriter(cardHTML.toFile.getPath))
+            .bracket(pw => IO(pw.write(output)))(pw => IO(pw.close()))
     } yield ()
-
-  private[this] def participantList2String(title: String,
-                                           input: Seq[ConnpassParticipant]): String = {
-    var result = Seq[String]()
-    var counter = 0
-    result :+= """<div class="container border">"""
-    while (counter < input.size) {
-      result :+= """    <div class="row align-items-center border"> """
-      result :+= """        <div class="col-md-6 py-2 bg-info text-light"> """
-      result :+= """            <h4 class="text-center">""" + title + "</h4>"
-      result :+= """        </div> """
-      result :+= """        <div class="col-md-6 py-2 bg-info text-light border-left"> """
-      result :+= """            <h4 class="text-center">""" + title + "</h4>"
-      result :+= """        </div> """
-      result :+= """    </div> """
-      result :+= """    <div class="row align-items-center border"> """
-      result :+= """        <div class="col-md-2"> """
-      result :+= """            <img src=" """ + input(counter).imageURL + "\""
-      result :+= """                 class="rounded" """
-      result :+= """                 width="160" height="160" """
-      result :+= """                 style="margin:20px 5px; object-fit:cover"/> """
-      result :+= """        </div> """
-      result :+= """        <div class="col-md-4 text-dark"> """
-      result :+= """            <h2 class="text-center">""" + input(counter).name + "</h2>"
-      result :+= """        </div> """
-      result :+= """        <div class="col-md-2 border-left"> """
-      result :+= """            <img src=" """ + input(counter + 1).imageURL + "\""
-      result :+= """                 class="rounded" """
-      result :+= """                 width="160" height="160" """
-      result :+= """                 style="margin:20px 5px; object-fit:cover"/> """
-      result :+= """        </div> """
-      result :+= """        <div class="col-md-4 text-dark"> """
-      result :+= """            <h2 class="text-center">""" + input(counter + 1).name + "</h2>"
-      result :+= """        </div> """
-      result :+= """    </div> """
-      if ((counter + 1 + 1) % 10 == 0) {
-        result :+= "    <div style=\"page-break-before:always\" />"
-      }
-      counter += 2
-    }
-    result :+= "</div>"
-    result.mkString("\n")
-  }
 }
