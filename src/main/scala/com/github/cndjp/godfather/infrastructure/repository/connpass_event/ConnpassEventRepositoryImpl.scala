@@ -70,14 +70,6 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
                    input :+ ConnpassParticipant("", "", null, ParticipantStatus.CANCELLED);
                  else input
                }
-//      factory <- (0 to (adjust.size / 2))
-//                  .foldLeft(IO.pure(Seq[(ConnpassParticipant, ConnpassParticipant)]())) {
-//                    (init, counter) =>
-//                      for {
-//                        initSeq <- init
-//                        appended <- IO(initSeq ++ Seq((adjust(counter), adjust(counter + 1))))
-//                      } yield appended
-//                  }
       result <- IO {
                  var init = Seq[String]()
                  var counter = 0
