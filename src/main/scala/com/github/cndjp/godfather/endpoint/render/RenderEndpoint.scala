@@ -20,12 +20,12 @@ object RenderEndpoint extends IOEndpointOps with LazyLogging with GodfatherInter
     get("render") {
       renderUsecase
         .exec(ConnpassEvent(url))
-        .attempt
-        .map {
-          case Left(err) =>
+        .redeem(
+          err => {
             logger.error("render", err)
             UnprocessableEntity(GodfatherGeneralException(err.getMessage))
-          case Right(_) => Output.unit(Status.SeeOther).withHeader("Location" -> "/index.html")
-        }
+          },
+          _ => Output.unit(Status.SeeOther).withHeader("Location" -> "/index.html")
+        )
     }
 }
