@@ -3,6 +3,7 @@ package com.github.cndjp.godfather.infrastructure.repository.connpass_event
 import java.io.IOException
 import java.net.URL
 import java.util.UUID
+
 import cats.syntax.all._
 import cats.effect.IO
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
@@ -16,6 +17,7 @@ import com.github.cndjp.godfather.domain.participant.ParticipantStatus.{
   WAITLISTED
 }
 import com.github.cndjp.godfather.domain.repository.ConnpassEventRepository
+import com.github.cndjp.godfather.domain.user_elements.UserElements
 import com.github.cndjp.godfather.exception.GodfatherException.{
   GodfatherGeneralException,
   GodfatherRendererException
@@ -27,6 +29,7 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
   private[this] val IMAGE_SOURCE_DEFAULT = new URL(
     "https://connpass.com/static/img/common/user_no_image_180.png")
 
+  // イベントのタイトルを持ってくる
   override def getEventTitle(event: ConnpassEvent): IO[String] =
     for {
       result <- try IO(
@@ -40,6 +43,7 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
                }
     } yield result
 
+  // コンパスのイベントURLから登録者を持ってくる
   override def getParticipants(event: ConnpassEvent): IO[Seq[ConnpassParticipant]] = {
     var elements = Seq[(ParticipantStatus, Elements)]()
     for {
@@ -63,7 +67,8 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
     } yield result
   }
 
-  override def participantList2String(title: String, input: Seq[ConnpassParticipant]): IO[String] =
+  // 登録者リストをパースしてcards.htmlに書き込むHTMLの文字列を返す
+  override def parseParticipantList(title: String, input: Seq[ConnpassParticipant]): IO[String] =
     for {
       adjust <- IO {
                  if (input.size % 2 == 1)
@@ -121,6 +126,7 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
                }
     } yield (result :+ "</div>").mkString("\n")
 
+  // HTMLのエレメントから、登録者リストを返す
   private[this] def element2Participants(
       input: Seq[(ParticipantStatus, Elements)]): IO[Seq[ConnpassParticipant]] =
     for {
@@ -129,7 +135,7 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
                    initSeq <- init
                    users <- element2Users(items._2)
                    participants <- IO {
-                                    users
+                                    users.elems
                                       .toArray(Array[Element]())
                                       .map {
                                         var userCounter = 0
@@ -163,7 +169,7 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
 
                                             userCounter += 1
                                             logger.info(
-                                              displayName + "(" + items._1.getName + "): " + userCounter + "/" + users
+                                              displayName + "(" + items._1.getName + "): " + userCounter + "/" + users.elems
                                                 .size())
                                             ConnpassParticipant(
                                               UUID.randomUUID().toString,
@@ -178,7 +184,8 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
                }
     } yield result
 
-  private[this] def element2Users(elems: Elements): IO[Elements] =
+  // connpass全体のHTMLのエレメントから、登録者全員のHTMLエレメントを返す
+  private[this] def element2Users(elems: Elements): IO[UserElements] =
     for {
       result <- elems
                  .toArray(Array[Element]())
@@ -233,5 +240,5 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
                    } yield initElems
                  }
       users <- IO.pure(result.select("td.user .user_info"))
-    } yield users
+    } yield UserElements(users)
 }

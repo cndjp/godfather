@@ -4,5 +4,5 @@ import cats.effect.IO
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
 
 trait RenderUsecase {
-  def exec(event: ConnpassEvent): IO[Unit]
+  def execOrIgnore(event: ConnpassEvent): IO[Unit]
 }
