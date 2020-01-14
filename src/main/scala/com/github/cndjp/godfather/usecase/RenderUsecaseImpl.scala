@@ -2,9 +2,9 @@ package com.github.cndjp.godfather.usecase
 import java.io.PrintWriter
 import java.nio.file.{Files, Path, Paths}
 
+import cats.implicits._
 import cats.effect.IO
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
-import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import com.github.cndjp.godfather.domain.repository.ConnpassEventRepository
 import scala.io.Source
 
@@ -26,6 +26,6 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository) extend
       title <- connpassEventRepository.getEventTitle(event)
       output <- connpassEventRepository.participantList2String(title, participants)
       _ <- IO(new PrintWriter(cardHTML.toFile.getPath))
-            .bracket(pw => IO(pw.write(output)))(pw => IO(pw.close()))
+            .bracket(pw => IO(pw.write(output)))(pw => IO(pw.close())) *> IO.unit
     } yield ()
 }

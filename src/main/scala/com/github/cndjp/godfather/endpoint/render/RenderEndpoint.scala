@@ -8,6 +8,7 @@ import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.endpoint.interface.GodfatherInterface
 import com.github.cndjp.godfather.endpoint.utils.io_endpoint.IOEndpointOps
 import com.github.cndjp.godfather.exception.GodfatherException.GodfatherGeneralException
+import com.twitter.finagle.http.Status
 import com.twitter.io.Buf
 import com.typesafe.scalalogging.LazyLogging
 import io.finch.{Endpoint, _}
