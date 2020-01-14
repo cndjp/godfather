@@ -1,12 +1,15 @@
 package com.github.cndjp.godfather.usecase
 import java.io.PrintWriter
 import java.nio.file.{Files, Path, Paths}
+import java.util.Random
+import java.util.concurrent.Executors
 
-import cats.effect.IO
+import cats.effect.{ContextShift, IO}
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import com.github.cndjp.godfather.domain.repository.ConnpassEventRepository
 
+import scala.concurrent.ExecutionContext
 import scala.io.Source
 
 class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository) extends RenderUsecase {
@@ -16,11 +19,8 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository) extend
     for {
       cardHTMLPath <- IO(Paths.get(s"$resourcesPath/cards.html"))
       _ <- if (Files.exists(cardHTMLPath)) IO.unit else render(event, cardHTMLPath)
-      indexHTML <- IO {
-                    val indexBuf = Source.fromFile(s"$resourcesPath/index.html")
-                    try indexBuf.mkString
-                    finally indexBuf.close()
-                  }
+      indexHTML <- IO(Source.fromFile(s"$resourcesPath/index.html"))
+                    .bracket(file => IO(file.mkString))(file => IO(file.close()))
     } yield indexHTML
 
   private[this] def render(event: ConnpassEvent, cardHTMLPath: Path): IO[Unit] =
@@ -38,11 +38,8 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository) extend
                             }
       title <- connpassEventRepository.getEventTitle(event)
       output <- IO(participantList2String(title, checkedParticipants))
-      _ <- IO {
-            val pw = new PrintWriter(cardHTML.toFile.getPath)
-            try pw.write(output)
-            finally pw.close()
-          }
+      _ <- IO(new PrintWriter(cardHTML.toFile.getPath)).bracket(pw => IO(pw.write(output)))(pw =>
+            IO(pw.close()))
     } yield ()
 
   private[this] def participantList2String(title: String,

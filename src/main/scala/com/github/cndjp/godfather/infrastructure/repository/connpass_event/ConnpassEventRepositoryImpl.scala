@@ -2,9 +2,11 @@ package com.github.cndjp.godfather.infrastructure.repository.connpass_event
 
 import java.io.IOException
 import java.net.URL
-import java.util.UUID
+import java.util.{Random, UUID}
+import java.util.concurrent.Executors
 
-import cats.effect.IO
+import cats.syntax.all._
+import cats.effect.{ContextShift, IO}
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import org.jsoup.Jsoup
@@ -19,6 +21,8 @@ import com.github.cndjp.godfather.domain.repository.ConnpassEventRepository
 import com.github.cndjp.godfather.exception.GodfatherException.GodfatherGeneralException
 import com.typesafe.scalalogging.LazyLogging
 import org.jsoup.nodes.Element
+
+import scala.concurrent.ExecutionContext
 
 class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLogging {
   private[this] val IMAGE_SOURCE_DEFAULT = new URL(
@@ -69,40 +73,48 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
                  for {
                    initSeq <- init
                    users <- element2Users(items._2)
-                   participant <- IO {
-                                   users.toArray(Array[Element]()).map {
-                                     var userCounter = 0
-                                     user =>
-                                       {
-                                         val displayName = user.select("p.display_name a").text()
-                                         val userHome =
-                                           Jsoup
-                                             .connect(user.select("p.display_name a").attr("href"))
-                                             .get()
-                                         val images = userHome.select(
-                                           "div[id=side_area] div[class=mb_20 text_center] a.image_link")
-                                         val imageSource =
-                                           if (!images.isEmpty)
-                                             images
-                                               .toArray(Array[Element]())
-                                               .find(_.attr("href").contains("/user/"))
-                                               .map(image => new URL(image.attr("href")))
-                                               .getOrElse(IMAGE_SOURCE_DEFAULT)
-                                           else IMAGE_SOURCE_DEFAULT
+                   participants <- IO {
+                                    users
+                                      .toArray(Array[Element]())
+                                      .map {
+                                        var userCounter = 0
+                                        user =>
+                                          {
+                                            val displayName = user
+                                              .select("p.display_name a")
+                                              .text()
+                                            val userHome =
+                                              Jsoup
+                                                .connect(
+                                                  user
+                                                    .select("p.display_name a")
+                                                    .attr("href"))
+                                                .get()
+                                            val images = userHome.select(
+                                              "div[id=side_area] div[class=mb_20 text_center] a.image_link")
+                                            val imageSource =
+                                              if (!images.isEmpty)
+                                                images
+                                                  .toArray(Array[Element]())
+                                                  .find(_.attr("href")
+                                                    .contains("/user/"))
+                                                  .map(image => new URL(image.attr("href")))
+                                                  .getOrElse(IMAGE_SOURCE_DEFAULT)
+                                              else IMAGE_SOURCE_DEFAULT
 
-                                         userCounter += 1
-                                         logger.info(
-                                           displayName + "(" + items._1.getName + "): " + userCounter + "/" + users
-                                             .size())
-                                         ConnpassParticipant(
-                                           UUID.randomUUID().toString,
-                                           displayName,
-                                           imageSource,
-                                           items._1)
-                                       }
-                                   }
-                                 }
-                   appendedInitSeq <- IO(initSeq ++ participant.toSeq)
+                                            userCounter += 1
+                                            logger.info(
+                                              displayName + "(" + items._1.getName + "): " + userCounter + "/" + users
+                                                .size())
+                                            ConnpassParticipant(
+                                              UUID.randomUUID().toString,
+                                              displayName,
+                                              imageSource,
+                                              items._1)
+                                          }
+                                      }
+                                  }
+                   appendedInitSeq <- IO(initSeq ++ participants)
                  } yield appendedInitSeq
                }
     } yield result
