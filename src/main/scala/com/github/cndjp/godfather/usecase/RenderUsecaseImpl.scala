@@ -1,8 +1,9 @@
 package com.github.cndjp.godfather.usecase
 import java.io.PrintWriter
 import java.nio.file.{Files, Path, Paths}
+import java.util.concurrent.{Executor, Executors}
 
-import cats.effect.{IO, Resource}
+import cats.effect.{IO, Resource, Timer}
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.domain.repository.ConnpassEventRepository
 import cats.effect.implicits._
@@ -10,6 +11,8 @@ import cats.syntax.all._
 import com.github.cndjp.godfather.exception.GodfatherException.GodfatherGeneralException
 import com.typesafe.scalalogging.LazyLogging
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.FiniteDuration
 import scala.io.Source
 
 class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository)
@@ -32,9 +35,8 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository)
       _ <- Resource
             .fromAutoCloseable(IO(new PrintWriter(cardHTML.toFile.getPath)))
             .use { pw =>
-              IO(pw.write(output))
+              IO(pw.write(output)) *> IO.unit
             }
-            .handleErrorWith(e => IO.raiseError(GodfatherGeneralException(e.getMessage)))
       _ <- IO(logger.info("Finish for rendering!!"))
     } yield ()
 }
