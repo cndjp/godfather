@@ -18,7 +18,10 @@ import com.github.cndjp.godfather.domain.participant.ParticipantStatus.{
   WAITLISTED
 }
 import com.github.cndjp.godfather.domain.repository.ConnpassEventRepository
-import com.github.cndjp.godfather.exception.GodfatherException.GodfatherGeneralException
+import com.github.cndjp.godfather.exception.GodfatherException.{
+  GodfatherGeneralException,
+  GodfatherRendererException
+}
 import com.typesafe.scalalogging.LazyLogging
 import org.jsoup.nodes.Element
 
@@ -30,25 +33,23 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
 
   override def getEventTitle(event: ConnpassEvent): IO[String] =
     for {
-      result <- try {
-                 IO(
-                   Jsoup
-                     .connect(event.url.toString)
-                     .get()
-                     .select("meta[itemprop=name]")
-                     .attr("content"))
-               } catch {
-                 case e: IOException => IO.raiseError(e)
+      result <- try IO(
+                 Jsoup
+                   .connect(event.url.toString)
+                   .get()
+                   .select("meta[itemprop=name]")
+                   .attr("content"))
+               catch {
+                 case e: IOException => IO.raiseError(GodfatherRendererException(e.getMessage))
                }
     } yield result
 
   override def getParticipants(event: ConnpassEvent): IO[Seq[ConnpassParticipant]] = {
     var elements = Seq[(ParticipantStatus, Elements)]()
     for {
-      document <- try {
-                   IO(Jsoup.connect(event.getParticipantsListUrl).get())
-                 } catch {
-                   case e: IOException => IO.raiseError(e)
+      document <- try IO(Jsoup.connect(event.getParticipantsListUrl).get())
+                 catch {
+                   case e: IOException => IO.raiseError(GodfatherRendererException(e.getMessage))
                  }
       _ <- IO.pure(ParticipantStatus.values.filterNot(_ == CANCELLED).foreach {
             case ORGANIZER =>
@@ -84,12 +85,16 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
                                               .select("p.display_name a")
                                               .text()
                                             val userHome =
-                                              Jsoup
+                                              try Jsoup
                                                 .connect(
                                                   user
                                                     .select("p.display_name a")
                                                     .attr("href"))
                                                 .get()
+                                              catch {
+                                                case e: IOException =>
+                                                  throw GodfatherRendererException(e.getMessage)
+                                              }
                                             val images = userHome.select(
                                               "div[id=side_area] div[class=mb_20 text_center] a.image_link")
                                             val imageSource =
@@ -132,7 +137,11 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
                 if (paginatedUserListUrl == null || !paginatedUserListUrl.contains("/ptype/"))
                   userTableElementsConsideringPagination.add(item)
                 else {
-                  val page1 = Jsoup.connect(paginatedUserListUrl).get()
+                  val page1 =
+                    try Jsoup.connect(paginatedUserListUrl).get()
+                    catch {
+                      case e: IOException => throw GodfatherRendererException(e.getMessage)
+                    }
                   userTableElementsConsideringPagination.add(page1)
                   val participantsCount = page1
                     .select("span.participants_count")
@@ -143,7 +152,10 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
                   var i = 2
                   while (i <= lastPage) {
                     val pageX =
-                      Jsoup.connect(paginatedUserListUrl + "?page=" + i).get()
+                      try Jsoup.connect(paginatedUserListUrl + "?page=" + i).get()
+                      catch {
+                        case e: IOException => throw GodfatherRendererException(e.getMessage)
+                      }
                     userTableElementsConsideringPagination.add(pageX)
                     i += 1
                   }
