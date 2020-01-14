@@ -2,7 +2,6 @@ package com.github.cndjp.godfather.infrastructure.repository.participant
 
 import java.io.IOException
 import java.net.URL
-import java.util.UUID
 import cats.implicits._
 import cats.effect.IO
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
@@ -22,17 +21,17 @@ class ConnpassParticipantRepositoryImpl extends ConnpassParticipantRepository wi
   override def element2Participants(
       input: Seq[(ParticipantStatus, Elements)]): IO[Seq[ConnpassParticipant]] =
     for {
-      result <- input.foldLeft(IO(Seq[ConnpassParticipant]())) { (init, items) =>
+      result <- input.foldLeft(IO(Seq[ConnpassParticipant]())) { (all, items) =>
                  for {
-                   initSeq <- init
+                   allSeq <- all
                    users <- element2Users(items._2)
                    participants <- users.elems
                                     .toArray(Array[Element]())
                                     .foldLeft(IO.pure(Seq[ConnpassParticipant]())) {
                                       var userCounter = 0
-                                      (init, elem) =>
+                                      (unit, elem) =>
                                         for {
-                                          initSeq <- init
+                                          unitSeq <- unit
                                           displayName <- IO(elem.select("p.display_name a").text())
                                           userDoc <- try IO(
                                                       Jsoup
@@ -47,15 +46,15 @@ class ConnpassParticipantRepositoryImpl extends ConnpassParticipantRepository wi
                                                     }
                                           participant <- IO(
                                                           ConnpassParticipant(displayName, userDoc))
-                                          appendedSeq <- IO(userCounter += 1) *>
-                                                          IO(logger.info(
-                                                            s"${participant.name} (${items._1.getName}): $userCounter / ${users.elems
-                                                              .size()}")) *>
-                                                          IO(initSeq :+ participant)
-                                        } yield appendedSeq
+                                          appendedUnitSeq <- IO(userCounter += 1) *>
+                                                              IO(logger.info(
+                                                                s"${participant.name} (${items._1.getName}): $userCounter / ${users.elems
+                                                                  .size()}")) *>
+                                                              IO(unitSeq :+ participant)
+                                        } yield appendedUnitSeq
                                     }
-                   appendedInitSeq <- IO(initSeq ++ participants)
-                 } yield appendedInitSeq
+                   appendedAllSeq <- IO(allSeq ++ participants)
+                 } yield appendedAllSeq
                }
     } yield result
 
