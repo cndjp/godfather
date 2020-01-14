@@ -70,48 +70,56 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
                    input :+ ConnpassParticipant("", "", null, ParticipantStatus.CANCELLED);
                  else input
                }
-      result <- IO {
-                 var init = Seq[String]()
-                 var counter = 0
-                 init :+= """<div class="container border">"""
-                 while (counter < adjust.size) {
-                   init :+= """    <div class="row align-items-center border"> """
-                   init :+= """        <div class="col-md-6 py-2 bg-info text-light"> """
-                   init :+= """            <h4 class="text-center">""" + title + "</h4>"
-                   init :+= """        </div> """
-                   init :+= """        <div class="col-md-6 py-2 bg-info text-light border-left"> """
-                   init :+= """            <h4 class="text-center">""" + title + "</h4>"
-                   init :+= """        </div> """
-                   init :+= """    </div> """
-                   init :+= """    <div class="row align-items-center border"> """
-                   init :+= """        <div class="col-md-2"> """
-                   init :+= """            <img src=" """ + adjust(counter).imageURL + "\""
-                   init :+= """                 class="rounded" """
-                   init :+= """                 width="160" height="160" """
-                   init :+= """                 style="margin:20px 5px; object-fit:cover"/> """
-                   init :+= """        </div> """
-                   init :+= """        <div class="col-md-4 text-dark"> """
-                   init :+= """            <h2 class="text-center">""" + adjust(counter).name + "</h2>"
-                   init :+= """        </div> """
-                   init :+= """        <div class="col-md-2 border-left"> """
-                   init :+= """            <img src=" """ + adjust(counter + 1).imageURL + "\""
-                   init :+= """                 class="rounded" """
-                   init :+= """                 width="160" height="160" """
-                   init :+= """                 style="margin:20px 5px; object-fit:cover"/> """
-                   init :+= """        </div> """
-                   init :+= """        <div class="col-md-4 text-dark"> """
-                   init :+= """            <h2 class="text-center">""" + adjust(counter + 1).name + "</h2>"
-                   init :+= """        </div> """
-                   init :+= """    </div> """
-                   if ((counter + 1 + 1) % 10 == 0) {
-                     init :+= "    <div style=\"page-break-before:always\" ></div>"
-                   }
-                   counter += 2
-                 }
-                 init :+= "</div>"
-                 init
+      factory <- IO {
+                  (0 until (input.size / 2))
+                    .foldLeft(Seq[(Int, ConnpassParticipant, ConnpassParticipant)]()) {
+                      (init, counter) =>
+                        val index = counter * 2
+                        init :+ (index, adjust(index), adjust(index + 1))
+                    }
+                }
+      result <- factory.foldLeft(IO.pure { Seq[String]("""<div class="container border">""") }) {
+                 (r, item) =>
+                   for {
+                     rSeq <- r
+                     renderUnit <- IO {
+                                    var unit = Seq[String]()
+                                    unit :+= """    <div class="row align-items-center border"> """
+                                    unit :+= """        <div class="col-md-6 py-2 bg-info text-light"> """
+                                    unit :+= """            <h4 class="text-center">""" + title + "</h4>"
+                                    unit :+= """        </div> """
+                                    unit :+= """        <div class="col-md-6 py-2 bg-info text-light border-left"> """
+                                    unit :+= """            <h4 class="text-center">""" + title + "</h4>"
+                                    unit :+= """        </div> """
+                                    unit :+= """    </div> """
+                                    unit :+= """    <div class="row align-items-center border"> """
+                                    unit :+= """        <div class="col-md-2"> """
+                                    unit :+= """            <img src=" """ + item._2.imageURL + "\""
+                                    unit :+= """                 class="rounded" """
+                                    unit :+= """                 width="160" height="160" """
+                                    unit :+= """                 style="margin:20px 5px; object-fit:cover"/> """
+                                    unit :+= """        </div> """
+                                    unit :+= """        <div class="col-md-4 text-dark"> """
+                                    unit :+= """            <h2 class="text-center">""" + item._2.name + "</h2>"
+                                    unit :+= """        </div> """
+                                    unit :+= """        <div class="col-md-2 border-left"> """
+                                    unit :+= """            <img src=" """ + item._3.imageURL + "\""
+                                    unit :+= """                 class="rounded" """
+                                    unit :+= """                 width="160" height="160" """
+                                    unit :+= """                 style="margin:20px 5px; object-fit:cover"/> """
+                                    unit :+= """        </div> """
+                                    unit :+= """        <div class="col-md-4 text-dark"> """
+                                    unit :+= """            <h2 class="text-center">""" + item._3.name + "</h2>"
+                                    unit :+= """        </div> """
+                                    unit :+= """    </div> """
+                                    if (item._1 % 10 == 0)
+                                      unit :+= "    <div style=\"page-break-before:always\" ></div>"
+                                    unit
+                                  }
+                     appendedSeq <- IO(rSeq ++ renderUnit)
+                   } yield appendedSeq
                }
-    } yield result.mkString("\n")
+    } yield (result :+ "</div>").mkString("\n")
 
   private[this] def element2Participants(
       input: Seq[(ParticipantStatus, Elements)]): IO[Seq[ConnpassParticipant]] =
