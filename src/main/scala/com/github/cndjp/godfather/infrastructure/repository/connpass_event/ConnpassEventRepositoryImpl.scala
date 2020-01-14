@@ -104,7 +104,7 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
                    init :+= """        </div> """
                    init :+= """    </div> """
                    if ((counter + 1 + 1) % 10 == 0) {
-                     init :+= "    <div style=\"page-break-before:always\" />"
+                     init :+= "    <div style=\"page-break-before:always\" ></div>"
                    }
                    counter += 2
                  }
