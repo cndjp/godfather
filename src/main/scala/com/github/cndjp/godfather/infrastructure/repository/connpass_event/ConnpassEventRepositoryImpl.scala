@@ -172,43 +172,58 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
 
   private[this] def element2Users(elems: Elements): IO[Elements] =
     for {
-      userTableElementsConsideringPagination <- IO.pure(new Elements())
-      _ <- IO {
-            elems.toArray(Array[Element]()).foreach { item =>
-              val paginatedUserListLink = item.select("tr.empty td[colspan=2] a")
-              if (paginatedUserListLink.isEmpty)
-                userTableElementsConsideringPagination.add(item)
-              else {
-                val paginatedUserListUrl = paginatedUserListLink.first().attr("href")
-                if (paginatedUserListUrl == null || !paginatedUserListUrl.contains("/ptype/"))
-                  userTableElementsConsideringPagination.add(item)
-                else {
-                  val page1 =
-                    try Jsoup.connect(paginatedUserListUrl).get()
-                    catch {
-                      case e: IOException => throw GodfatherRendererException(e.getMessage)
-                    }
-                  userTableElementsConsideringPagination.add(page1)
-                  val participantsCount = page1
-                    .select("span.participants_count")
-                    .text()
-                    .replace("人", "")
-                    .toInt
-                  val lastPage = participantsCount / 100 + 1
-                  var i = 2
-                  while (i <= lastPage) {
-                    val pageX =
-                      try Jsoup.connect(paginatedUserListUrl + "?page=" + i).get()
-                      catch {
-                        case e: IOException => throw GodfatherRendererException(e.getMessage)
-                      }
-                    userTableElementsConsideringPagination.add(pageX)
-                    i += 1
-                  }
-                }
-              }
-            }
-          }
-      users <- IO.pure(userTableElementsConsideringPagination.select("td.user .user_info"))
+      result <- elems
+                 .toArray(Array[Element]())
+                 .foldLeft(IO.pure(new Elements())) { (init, item) =>
+                   for {
+                     initElems <- init
+                     _ <- IO {
+                           val paginatedUserListLink = item
+                             .select("tr.empty td[colspan=2] a")
+                           if (paginatedUserListLink.isEmpty)
+                             initElems.add(item)
+                           else {
+                             val paginatedUserListUrl =
+                               paginatedUserListLink
+                                 .first()
+                                 .attr("href")
+                             if (paginatedUserListUrl == null || !paginatedUserListUrl
+                                   .contains("/ptype/"))
+                               initElems.add(item)
+                             else {
+                               val page1 =
+                                 try Jsoup
+                                   .connect(paginatedUserListUrl)
+                                   .get()
+                                 catch {
+                                   case e: IOException =>
+                                     throw GodfatherRendererException(e.getMessage)
+                                 }
+                               initElems.add(page1)
+                               val participantsCount = page1
+                                 .select("span.participants_count")
+                                 .text()
+                                 .replace("人", "")
+                                 .toInt
+                               val lastPage = participantsCount / 100 + 1
+                               var i = 2
+                               while (i <= lastPage) {
+                                 val pageX =
+                                   try Jsoup
+                                     .connect(paginatedUserListUrl + "?page=" + i)
+                                     .get()
+                                   catch {
+                                     case e: IOException =>
+                                       throw GodfatherRendererException(e.getMessage)
+                                   }
+                                 initElems.add(pageX)
+                                 i += 1
+                               }
+                             }
+                           }
+                         }
+                   } yield initElems
+                 }
+      users <- IO.pure(result.select("td.user .user_info"))
     } yield users
 }
