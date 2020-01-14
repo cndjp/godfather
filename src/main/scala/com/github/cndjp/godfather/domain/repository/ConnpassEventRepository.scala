@@ -8,4 +8,6 @@ trait ConnpassEventRepository {
   def getEventTitle(event: ConnpassEvent): IO[String]
 
   def getParticipants(event: ConnpassEvent): IO[Seq[ConnpassParticipant]]
+
+  def participantList2String(title: String, input: Seq[ConnpassParticipant]): IO[String]
 }
