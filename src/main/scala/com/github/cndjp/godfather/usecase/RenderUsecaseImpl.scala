@@ -9,18 +9,23 @@ import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepositor
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
 import com.typesafe.scalalogging.LazyLogging
 
+import scala.io.Source
+
 class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
                         connpassParticipantRepository: ConnpassParticipantRepository)
     extends RenderUsecase
     with LazyLogging {
   private[this] val resourcesPath = "./src/main/resources"
 
-  // cards.htmlがあったらレンダリング、なかったら何にもしない
-  override def execOrIgnore(event: ConnpassEvent): IO[Unit] =
+  // cards.htmlがあったらレンダリング、なかったら何にもしない、で最後にindex.htmlを返す
+  override def execOrIgnore(event: ConnpassEvent): IO[String] =
     for {
       cardHTMLPath <- IO(Paths.get(s"$resourcesPath/cards.html"))
       _ <- if (Files.exists(cardHTMLPath)) IO.unit else render(event, cardHTMLPath)
-    } yield ()
+      indexHTML <- Resource
+                    .fromAutoCloseable(IO(Source.fromFile(s"$resourcesPath/index.html")))
+                    .use(file => IO(file.mkString))
+    } yield indexHTML
 
   // レンダリングをやる
   private[this] def render(event: ConnpassEvent, cardHTMLPath: Path): IO[Unit] =
@@ -43,9 +48,7 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
       // 最後にoutputをcards.htmlのファイルに書き込む
       _ <- Resource
             .fromAutoCloseable(IO(new PrintWriter(cardHTML.toFile.getPath)))
-            .use { pw =>
-              IO(pw.write(output)) *> IO.unit
-            }
+            .use(pw => IO(pw.write(output)))
       _ <- IO(logger.info("Finish for rendering!!"))
     } yield ()
 }
