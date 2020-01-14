@@ -9,5 +9,5 @@ trait ConnpassEventRepository {
 
   def getParticipants(event: ConnpassEvent): IO[Seq[ConnpassParticipant]]
 
-  def participantList2String(title: String, input: Seq[ConnpassParticipant]): IO[String]
+  def parseParticipantList(title: String, input: Seq[ConnpassParticipant]): IO[String]
 }

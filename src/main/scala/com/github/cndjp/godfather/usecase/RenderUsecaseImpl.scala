@@ -20,18 +20,29 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository)
     with LazyLogging {
   private[this] val resourcesPath = "./src/main/resources"
 
-  override def exec(event: ConnpassEvent): IO[Unit] =
+  // cards.htmlがあったらレンダリング、なかったら何にもしない
+  override def execOrIgnore(event: ConnpassEvent): IO[Unit] =
     for {
       cardHTMLPath <- IO(Paths.get(s"$resourcesPath/cards.html"))
       _ <- if (Files.exists(cardHTMLPath)) IO.unit else render(event, cardHTMLPath)
     } yield ()
 
+  // レンダリングをやる
   private[this] def render(event: ConnpassEvent, cardHTMLPath: Path): IO[Unit] =
     for {
+      // cards.htmlのファイルを作る
       cardHTML <- IO(Files.createFile(cardHTMLPath))
+
+      // 登録者をconnpassのページからfetchしてくる
       participants <- connpassEventRepository.getParticipants(event)
+
+      // イベントのタイトルをconnpassのページからfetchしてくる
       title <- connpassEventRepository.getEventTitle(event)
-      output <- connpassEventRepository.participantList2String(title, participants)
+
+      // 登録者とイベントのタイトルをパースしてcards.htmlのファイルに書き込むHTMLの文字列を持ってくる
+      output <- connpassEventRepository.parseParticipantList(title, participants)
+
+      // 最後にoutputをcards.htmlのファイルに書き込む
       _ <- Resource
             .fromAutoCloseable(IO(new PrintWriter(cardHTML.toFile.getPath)))
             .use { pw =>
