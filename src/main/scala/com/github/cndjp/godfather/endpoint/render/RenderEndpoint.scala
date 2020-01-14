@@ -16,7 +16,7 @@ import io.finch.{Endpoint, _}
 object RenderEndpoint extends IOEndpointOps with LazyLogging with GodfatherInterface {
   def create(url: URL) = execRender(url)
 
-  private def execRender(url: URL): Endpoint[IO, Buf] =
+  private def execRender(url: URL): Endpoint[IO, Unit] =
     get("render") {
       renderUsecase
         .exec(ConnpassEvent(url))
@@ -25,7 +25,7 @@ object RenderEndpoint extends IOEndpointOps with LazyLogging with GodfatherInter
           case Left(err) =>
             logger.error("render", err)
             UnprocessableEntity(GodfatherGeneralException(err.getMessage))
-          case Right(html) => Ok(Buf.Utf8(html))
+          case Right(_) => Output.unit(Status.SeeOther).withHeader("Location" -> "/index.html")
         }
     }
 }

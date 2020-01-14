@@ -42,7 +42,7 @@ object Godfather extends App with LazyLogging {
       implicit val S: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
       val api = Bootstrap
         .serve[Text.Plain](HealthCheckEndpoint.hc)
-        .serve[Text.Html](RenderEndpoint.create(config.eventURL))
+        .serve[Text.Plain](RenderEndpoint.create(config.eventURL))
         .serve[Application.Javascript](Endpoint[IO].classpathAsset("/include.js"))
         .serve[Text.Html](Endpoint[IO].classpathAsset("/index.html"))
         .serve[Text.Html](Endpoint[IO].classpathAsset("/cards.html"))
