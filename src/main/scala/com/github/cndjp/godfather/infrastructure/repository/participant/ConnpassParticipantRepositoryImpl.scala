@@ -3,7 +3,7 @@ package com.github.cndjp.godfather.infrastructure.repository.participant
 import java.io.IOException
 import java.net.URL
 import java.util.UUID
-
+import cats.implicits._
 import cats.effect.IO
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
@@ -18,12 +18,53 @@ class ConnpassParticipantRepositoryImpl extends ConnpassParticipantRepository wi
   private[this] val IMAGE_SOURCE_DEFAULT = new URL(
     "https://connpass.com/static/img/common/user_no_image_180.png")
 
+  // HTMLのエレメントから、登録者リストを返す
+  override def element2Participants(
+      input: Seq[(ParticipantStatus, Elements)]): IO[Seq[ConnpassParticipant]] =
+    for {
+      result <- input.foldLeft(IO(Seq[ConnpassParticipant]())) { (init, items) =>
+                 for {
+                   initSeq <- init
+                   users <- element2Users(items._2)
+                   participants <- users.elems
+                                    .toArray(Array[Element]())
+                                    .foldLeft(IO.pure(Seq[ConnpassParticipant]())) {
+                                      var userCounter = 0
+                                      (init, elem) =>
+                                        for {
+                                          initSeq <- init
+                                          displayName <- IO(elem.select("p.display_name a").text())
+                                          userDoc <- try IO(
+                                                      Jsoup
+                                                        .connect(elem
+                                                          .select("p.display_name a")
+                                                          .attr("href"))
+                                                        .get())
+                                                    catch {
+                                                      case e: IOException =>
+                                                        IO.raiseError(
+                                                          GodfatherRendererException(e.getMessage))
+                                                    }
+                                          participant <- IO(
+                                                          ConnpassParticipant(displayName, userDoc))
+                                          appendedSeq <- IO(userCounter += 1) *>
+                                                          IO(logger.info(
+                                                            s"${participant.name} (${items._1.getName}): $userCounter / ${users.elems
+                                                              .size()}")) *>
+                                                          IO(initSeq :+ participant)
+                                        } yield appendedSeq
+                                    }
+                   appendedInitSeq <- IO(initSeq ++ participants)
+                 } yield appendedInitSeq
+               }
+    } yield result
+
   // 登録者リストをパースしてcards.htmlに書き込むHTMLの文字列を返す
   override def parseParticipantList(title: String, input: Seq[ConnpassParticipant]): IO[String] =
     for {
       adjust <- IO {
                  if (input.size % 2 == 1)
-                   input :+ ConnpassParticipant("", "", null, ParticipantStatus.CANCELLED);
+                   input :+ ConnpassParticipant("", "", null)
                  else input
                }
       factory <- IO {
@@ -77,65 +118,7 @@ class ConnpassParticipantRepositoryImpl extends ConnpassParticipantRepository wi
                }
     } yield (result :+ "</div>").mkString("\n")
 
-  // HTMLのエレメントから、登録者リストを返す
-  override def element2Participants(
-      input: Seq[(ParticipantStatus, Elements)]): IO[Seq[ConnpassParticipant]] =
-    for {
-      result <- input.foldLeft(IO(Seq[ConnpassParticipant]())) { (init, items) =>
-                 for {
-                   initSeq <- init
-                   users <- element2Users(items._2)
-                   participants <- IO {
-                                    users.elems
-                                      .toArray(Array[Element]())
-                                      .map {
-                                        var userCounter = 0
-                                        user =>
-                                          {
-                                            val displayName = user
-                                              .select("p.display_name a")
-                                              .text()
-                                            val userHome =
-                                              try Jsoup
-                                                .connect(
-                                                  user
-                                                    .select("p.display_name a")
-                                                    .attr("href"))
-                                                .get()
-                                              catch {
-                                                case e: IOException =>
-                                                  throw GodfatherRendererException(e.getMessage)
-                                              }
-                                            val images = userHome.select(
-                                              "div[id=side_area] div[class=mb_20 text_center] a.image_link")
-                                            val imageSource =
-                                              if (!images.isEmpty)
-                                                images
-                                                  .toArray(Array[Element]())
-                                                  .find(_.attr("href")
-                                                    .contains("/user/"))
-                                                  .map(image => new URL(image.attr("href")))
-                                                  .getOrElse(IMAGE_SOURCE_DEFAULT)
-                                              else IMAGE_SOURCE_DEFAULT
-
-                                            userCounter += 1
-                                            logger.info(
-                                              displayName + "(" + items._1.getName + "): " + userCounter + "/" + users.elems
-                                                .size())
-                                            ConnpassParticipant(
-                                              UUID.randomUUID().toString,
-                                              displayName,
-                                              imageSource,
-                                              items._1)
-                                          }
-                                      }
-                                  }
-                   appendedInitSeq <- IO(initSeq ++ participants)
-                 } yield appendedInitSeq
-               }
-    } yield result
-
-  // connpass全体のHTMLのエレメントから、登録者全員のHTMLエレメントを返す
+  // connpassのURLからfetchしてきたHTMLエレメントを加工して、利用しやすい形の登録者全員のHTMLにして返す
   private[this] def element2Users(elems: Elements): IO[UserElements] =
     for {
       result <- elems
