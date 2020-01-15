@@ -7,6 +7,7 @@ import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import cats.syntax.all._
 import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepository
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
+import com.github.cndjp.godfather.exception.GodfatherException.GodfatherGeneralException
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.io.Source
@@ -20,13 +21,14 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
   // cards.htmlがレンダリングして最後にindex.htmlを返す
   override def exec(event: ConnpassEvent): IO[Unit] =
     for {
-      cardHTMLPath <- IO(Paths.get(s"$resourcesPath/cards.html"))
-      _ <- render(event, cardHTMLPath)
-    } yield ()
 
-  // レンダリングをやる
-  private[this] def render(event: ConnpassEvent, cardHTMLPath: Path): IO[Unit] =
-    for {
+      // resourcesPath/cards.htmlを探しに行く
+      cardHTMLPath <- IO(Paths.get(s"$resourcesPath/cards.html"))
+
+      // resourcesPath/cards.htmlがあったらそのまま、なかったら作る
+      cardHTML <- if (cardHTMLPath.toFile.exists) IO(cardHTMLPath.toFile)
+                 else IO(Files.createFile(cardHTMLPath).toFile)
+
       // 登録者をconnpassのページからfetchしてくる
       elements <- connpassEventRepository.getElements(event)
 
@@ -41,7 +43,7 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
 
       // 最後にoutputをcards.htmlのファイルに書き込む
       _ <- Resource
-            .fromAutoCloseable(IO(new PrintWriter(cardHTMLPath.toFile.getPath)))
+            .fromAutoCloseable(IO(new PrintWriter(cardHTML.getPath)))
             .use(pw => IO(pw.write(output)))
       _ <- IO(logger.info("Finish for rendering!!"))
     } yield ()
