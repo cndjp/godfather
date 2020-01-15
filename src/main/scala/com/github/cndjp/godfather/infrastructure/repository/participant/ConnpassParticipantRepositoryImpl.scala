@@ -21,13 +21,13 @@ class ConnpassParticipantRepositoryImpl extends ConnpassParticipantRepository wi
   override def element2Participants(
       input: Seq[(ParticipantStatus, Elements)]): IO[Seq[ConnpassParticipant]] =
     for {
-      result <- input.foldLeft(IO(Seq[ConnpassParticipant]())) { (all, items) =>
+      result <- input.foldLeft(IO.pure(Seq.empty[ConnpassParticipant])) { (all, items) =>
                  for {
                    allSeq <- all
                    users <- element2Users(items._2)
                    participants <- users.elems
                                     .toArray(Array[Element]())
-                                    .foldLeft(IO.pure(Seq[ConnpassParticipant]())) {
+                                    .foldLeft(IO.pure(Seq.empty[ConnpassParticipant])) {
                                       var userCounter = 0
                                       (unit, elem) =>
                                         for {
@@ -68,7 +68,7 @@ class ConnpassParticipantRepositoryImpl extends ConnpassParticipantRepository wi
                }
       factory <- IO {
                   (0 until (input.size / 2))
-                    .foldLeft(Seq[(Int, ConnpassParticipant, ConnpassParticipant)]()) {
+                    .foldLeft(Seq.empty[(Int, ConnpassParticipant, ConnpassParticipant)]) {
                       (init, counter) =>
                         val index = counter * 2
                         init :+ (index, adjust(index), adjust(index + 1))
