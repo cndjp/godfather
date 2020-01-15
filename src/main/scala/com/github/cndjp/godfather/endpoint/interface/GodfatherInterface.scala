@@ -6,7 +6,7 @@ import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepositor
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
 import com.github.cndjp.godfather.infrastructure.repository.event.ConnpassEventRepositoryImpl
 import com.github.cndjp.godfather.infrastructure.repository.participant.ConnpassParticipantRepositoryImpl
-import com.github.cndjp.godfather.usecase.{RenderUsecase, RenderUsecaseImpl}
+import com.github.cndjp.godfather.usecase.render.{RenderUsecase, RenderUsecaseImpl}
 import com.softwaremill.macwire._
 
 trait GodfatherInterface {

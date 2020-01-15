@@ -14,9 +14,6 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 
 class ConnpassParticipantRepositoryImpl extends ConnpassParticipantRepository with LazyLogging {
-  private[this] val IMAGE_SOURCE_DEFAULT = new URL(
-    "https://connpass.com/static/img/common/user_no_image_180.png")
-
   // HTMLのエレメントから、登録者リストを返す
   override def element2Participants(
       input: Seq[(ParticipantStatus, Elements)]): IO[Seq[ConnpassParticipant]] =

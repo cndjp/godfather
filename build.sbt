@@ -35,5 +35,10 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
   "com.github.pathikrit" %% "better-files" % "3.7.1",
-  "com.beachape" %% "enumeratum" % "1.5.13"
+  "com.beachape" %% "enumeratum" % "1.5.13",
+  "org.scalactic" %% "scalactic" % "3.0.5",
+  "org.scalatest" %% "scalatest" % "3.0.5",
+  "org.scalacheck" %% "scalacheck" % "1.14.0",
+  "org.mockito" % "mockito-core" % "2.7.22",
+  "org.scalamock" %% "scalamock-scalatest-support" % "3.6.0",
 )

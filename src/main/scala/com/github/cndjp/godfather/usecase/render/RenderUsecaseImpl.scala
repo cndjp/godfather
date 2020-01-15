@@ -1,13 +1,13 @@
-package com.github.cndjp.godfather.usecase
-import java.io.PrintWriter
-import java.nio.file.{Files, Path, Paths}
+package com.github.cndjp.godfather.usecase.render
 
-import cats.effect.{IO, Resource, Timer}
-import com.github.cndjp.godfather.domain.event.ConnpassEvent
+import java.io.PrintWriter
+import java.nio.file.{Files, Paths}
+
+import cats.effect.{IO, Resource}
 import cats.syntax.all._
+import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepository
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
-import com.github.cndjp.godfather.exception.GodfatherException.GodfatherGeneralException
 import com.twitter.io.Buf
 import com.typesafe.scalalogging.LazyLogging
 
@@ -17,8 +17,6 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
                         connpassParticipantRepository: ConnpassParticipantRepository)
     extends RenderUsecase
     with LazyLogging {
-  private[this] val resourcesPath = "./src/main/resources"
-
   // cards.htmlがレンダリングして最後にindex.htmlを返す
   override def exec(event: ConnpassEvent): IO[Buf] =
     for {
