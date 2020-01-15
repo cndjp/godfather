@@ -2,7 +2,6 @@ package com.github.cndjp.godfather.usecase.render
 
 import better.files._
 import cats.effect.{IO, Resource}
-import cats.syntax.all._
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepository
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
