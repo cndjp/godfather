@@ -17,7 +17,7 @@ object RenderEndpoint extends IOEndpointOps with LazyLogging with GodfatherInter
   def create(url: URL) = execRender(url)
 
   // レンダリングしてindex.htmlにリダイレクトするエンドポイント
-  private def execRender(url: URL): Endpoint[IO, Unit] =
+  private def execRender(url: URL): Endpoint[IO, Buf] =
     get("render") {
       renderUsecase
         .exec(ConnpassEvent(url))
@@ -28,7 +28,7 @@ object RenderEndpoint extends IOEndpointOps with LazyLogging with GodfatherInter
             UnprocessableEntity(GodfatherGeneralException(err.getMessage))
           },
           // 成功したら 303で/index.htmlにリダイレクト
-          _ => Output.unit(Status.SeeOther).withHeader("Location" -> "/index.html")
+          indexHTML => Ok(indexHTML)
         )
     }
 }
