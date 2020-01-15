@@ -13,7 +13,7 @@ import com.twitter.io.Buf
 import com.typesafe.scalalogging.LazyLogging
 import io.finch.{Endpoint, _}
 
-object RenderEndpoint extends IOEndpointOps with LazyLogging with GodfatherInterface {
+class RenderEndpoint extends IOEndpointOps with LazyLogging with GodfatherInterface {
   def create(url: URL) = execRender(url)
 
   // レンダリングしてindex.htmlにリダイレクトするエンドポイント
