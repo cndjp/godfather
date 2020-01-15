@@ -17,18 +17,18 @@ object RenderEndpoint extends IOEndpointOps with LazyLogging with GodfatherInter
   def create(url: URL) = execRender(url)
 
   // レンダリングしてindex.htmlにリダイレクトするエンドポイント
-  private def execRender(url: URL): Endpoint[IO, Buf] =
+  private def execRender(url: URL): Endpoint[IO, Unit] =
     get("render") {
       renderUsecase
-        .execOrIgnore(ConnpassEvent(url))
+        .exec(ConnpassEvent(url))
         .redeem(
           err => {
             logger.error("render", err)
             // 失敗したら 422
             UnprocessableEntity(GodfatherGeneralException(err.getMessage))
           },
-          // 成功したら 200でindex.htmlを写す
-          indexHTML => Ok(Buf.Utf8(indexHTML))
+          // 成功したら 303で/index.htmlにリダイレクト
+          _ => Output.unit(Status.SeeOther).withHeader("Location" -> "/index.html")
         )
     }
 }
