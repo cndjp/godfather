@@ -21,7 +21,6 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
   // cards.htmlがレンダリングして最後にindex.htmlを返す
   override def exec(event: ConnpassEvent): IO[Unit] =
     for {
-
       // resourcesPath/cards.htmlを探しに行く
       cardHTMLPath <- IO(Paths.get(s"$resourcesPath/cards.html"))
 
