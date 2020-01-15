@@ -2,7 +2,6 @@
 project/project
 project/target
 target/
-src/main/resources/cards.html
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup

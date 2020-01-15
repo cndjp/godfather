@@ -25,9 +25,10 @@ object Godfather extends TwitterServer {
     implicit val S: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
     val api = Bootstrap
       .serve[Text.Plain](HealthCheckEndpoint.hc)
-      .serve[Text.Html](RenderEndpoint.create(new URL(s"${eventURL()}")))
+      .serve[Text.Plain](RenderEndpoint.create(new URL(s"${eventURL()}")))
       .serve[Application.Javascript](Endpoint[IO].classpathAsset("/include.js"))
       .serve[Text.Html](Endpoint[IO].classpathAsset("/cards.html"))
+      .serve[Text.Html](Endpoint[IO].classpathAsset("/index.html"))
 
     val server =
       Http.server.withAdmissionControl

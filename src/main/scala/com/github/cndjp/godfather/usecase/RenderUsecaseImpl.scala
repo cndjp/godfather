@@ -17,22 +17,16 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
     with LazyLogging {
   private[this] val resourcesPath = "./src/main/resources"
 
-  // cards.htmlがあったらレンダリング、なかったら何にもしない、で最後にindex.htmlを返す
-  override def execOrIgnore(event: ConnpassEvent): IO[String] =
+  // cards.htmlがレンダリングして最後にindex.htmlを返す
+  override def exec(event: ConnpassEvent): IO[Unit] =
     for {
       cardHTMLPath <- IO(Paths.get(s"$resourcesPath/cards.html"))
-      _ <- if (Files.exists(cardHTMLPath)) IO.unit else render(event, cardHTMLPath)
-      indexHTML <- Resource
-                    .fromAutoCloseable(IO(Source.fromFile(s"$resourcesPath/index.html")))
-                    .use(file => IO(file.mkString))
-    } yield indexHTML
+      _ <- render(event, cardHTMLPath)
+    } yield ()
 
   // レンダリングをやる
   private[this] def render(event: ConnpassEvent, cardHTMLPath: Path): IO[Unit] =
     for {
-      // cards.htmlのファイルを作る
-      cardHTML <- IO(Files.createFile(cardHTMLPath))
-
       // 登録者をconnpassのページからfetchしてくる
       elements <- connpassEventRepository.getElements(event)
 
@@ -47,7 +41,7 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
 
       // 最後にoutputをcards.htmlのファイルに書き込む
       _ <- Resource
-            .fromAutoCloseable(IO(new PrintWriter(cardHTML.toFile.getPath)))
+            .fromAutoCloseable(IO(new PrintWriter(cardHTMLPath.toFile.getPath)))
             .use(pw => IO(pw.write(output)))
       _ <- IO(logger.info("Finish for rendering!!"))
     } yield ()
