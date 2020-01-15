@@ -8,6 +8,7 @@ import cats.syntax.all._
 import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepository
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
 import com.github.cndjp.godfather.exception.GodfatherException.GodfatherGeneralException
+import com.twitter.io.Buf
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.io.Source
@@ -19,7 +20,7 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
   private[this] val resourcesPath = "./src/main/resources"
 
   // cards.htmlがレンダリングして最後にindex.htmlを返す
-  override def exec(event: ConnpassEvent): IO[Unit] =
+  override def exec(event: ConnpassEvent): IO[Buf] =
     for {
       // resourcesPath/cards.htmlを探しに行く
       cardHTMLPath <- IO(Paths.get(s"$resourcesPath/cards.html"))
@@ -43,7 +44,12 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
       // 最後にoutputをcards.htmlのファイルに書き込む
       _ <- Resource
             .fromAutoCloseable(IO(new PrintWriter(cardHTML.getPath)))
-            .use(pw => IO(pw.write(output)))
+            .use(pw => IO(pw.write(output)) *> IO(pw.flush()))
+
+      // index.htmlを返す
+      indexHTML <- Resource
+                    .fromAutoCloseable(IO(Source.fromFile(s"$resourcesPath/index.html")))
+                    .use(file => IO(Buf.Utf8(file.mkString)))
       _ <- IO(logger.info("Finish for rendering!!"))
-    } yield ()
+    } yield indexHTML
 }
