@@ -49,7 +49,7 @@ class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLoggi
                  }
       result <- ParticipantStatus.values
                  .filterNot(_ == CANCELLED)
-                 .foldLeft(IO.pure { Seq[(ParticipantStatus, Elements)]() }) { (init, status) =>
+                 .foldLeft(IO.pure { Seq.empty[(ParticipantStatus, Elements)] }) { (init, status) =>
                    for {
                      initSeq <- init
                      doc <- status match {
