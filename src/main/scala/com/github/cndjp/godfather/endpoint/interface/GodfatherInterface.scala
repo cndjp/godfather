@@ -1,7 +1,5 @@
 package com.github.cndjp.godfather.endpoint.interface
 
-import java.net.URL
-
 import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepository
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
 import com.github.cndjp.godfather.infrastructure.repository.event.ConnpassEventRepositoryImpl

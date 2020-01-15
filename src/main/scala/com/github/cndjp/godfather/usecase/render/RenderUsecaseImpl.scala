@@ -1,13 +1,12 @@
 package com.github.cndjp.godfather.usecase.render
 
-import java.io.PrintWriter
-import java.nio.file.{Files, Paths}
-
+import better.files._
 import cats.effect.{IO, Resource}
 import cats.syntax.all._
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepository
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
+import com.github.cndjp.godfather.usecase.utils.GodfatherUsecaseUtils
 import com.twitter.io.Buf
 import com.typesafe.scalalogging.LazyLogging
 
@@ -16,16 +15,14 @@ import scala.io.Source
 class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
                         connpassParticipantRepository: ConnpassParticipantRepository)
     extends RenderUsecase
+    with GodfatherUsecaseUtils
     with LazyLogging {
   // cards.htmlがレンダリングして最後にindex.htmlを返す
+
   override def exec(event: ConnpassEvent): IO[Buf] =
     for {
-      // resourcesPath/cards.htmlを探しに行く
-      cardHTMLPath <- IO(Paths.get(s"$resourcesPath/cards.html"))
-
       // resourcesPath/cards.htmlがあったらそのまま、なかったら作る
-      cardHTML <- if (cardHTMLPath.toFile.exists) IO(cardHTMLPath.toFile)
-                 else IO(Files.createFile(cardHTMLPath).toFile)
+      cardHTML <- IO(File(s"$resourcesPath/cards.html").createFileIfNotExists())
 
       // 登録者をconnpassのページからfetchしてくる
       elements <- connpassEventRepository.getElements(event)
@@ -40,14 +37,14 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
       output <- connpassParticipantRepository.parseParticipantList(title, participants)
 
       // 最後にoutputをcards.htmlのファイルに書き込む
-      _ <- Resource
-            .fromAutoCloseable(IO(new PrintWriter(cardHTML.getPath)))
-            .use(pw => IO(pw.write(output)) *> IO(pw.flush()))
+      _ <- IO(cardHTML.write(output))
 
       // index.htmlを返す
       indexHTML <- Resource
                     .fromAutoCloseable(IO(Source.fromFile(s"$resourcesPath/index.html")))
                     .use(file => IO(Buf.Utf8(file.mkString)))
+
       _ <- IO(logger.info("Finish for rendering!!"))
     } yield indexHTML
+
 }
