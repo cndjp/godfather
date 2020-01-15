@@ -28,6 +28,7 @@ class RederUsecaseSpec extends GodfatherTestSupport {
     describe("指定のエンドポイントを叩くと、") {
       it("OK が返ってくること") {
         val expectHTML = "<h1>ダミーのINDEXだよん</h1>"
+        val dummyCardHTML = "<h1>ダミーのカードだよん</h1>"
         (mockConnpassEventRepository.getEventTitle _).expects(*).returning(IO("水の呼吸勉強会")).once()
         (mockConnpassEventRepository.getElements _)
           .expects(*)
@@ -53,7 +54,7 @@ class RederUsecaseSpec extends GodfatherTestSupport {
         (mockConnpassParticipantRepository
           .parseParticipantList(_: String, _: Seq[ConnpassParticipant]))
           .expects(*, *)
-          .returning(IO(expectHTML))
+          .returning(IO(dummyCardHTML))
           .once()
 
         val actual = mockUsecase
