@@ -27,6 +27,7 @@ object Godfather extends TwitterServer {
       .serve[Text.Plain](renderEndpoint.create(new URL(s"${eventURL()}")))
       .serve[Application.Javascript](resourceEndpoint.createContentJS)
       .serve[Text.Html](resourceEndpoint.createContentHTML)
+      .compile
 
     val server =
       Http.server.withAdmissionControl
