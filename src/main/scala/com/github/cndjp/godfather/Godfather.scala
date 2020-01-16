@@ -1,17 +1,14 @@
 package com.github.cndjp.godfather
 
 import java.net.URL
-import java.util.concurrent.Executors
-
-import cats.effect.{ContextShift, IO}
 import com.github.cndjp.godfather.endpoint.hc.HealthCheckEndpoint
 import com.github.cndjp.godfather.endpoint.render.RenderEndpoint
+import com.github.cndjp.godfather.endpoint.resource.ResourceEndpoint
 import com.twitter.finagle.Http
 import com.twitter.util.Await
 import io.finch.Application
 import io.finch._
 
-import scala.concurrent.ExecutionContext
 import com.twitter.server.TwitterServer
 
 object Godfather extends TwitterServer {
@@ -22,14 +19,14 @@ object Godfather extends TwitterServer {
   def main(): Unit = {
     logger.info(s"レンダリングするイベントURL: ${eventURL()}")
     val renderEndpoint = new RenderEndpoint
+    val healthCheckEndpoint = new HealthCheckEndpoint
+    val resourceEndpoint = new ResourceEndpoint
 
-    implicit val S: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
     val api = Bootstrap
-      .serve[Text.Plain](HealthCheckEndpoint.hc)
-      .serve[Text.Html](renderEndpoint.create(new URL(s"${eventURL()}")))
-      .serve[Application.Javascript](Endpoint[IO].classpathAsset("/include.js"))
-      .serve[Text.Html](Endpoint[IO].classpathAsset("/cards.html"))
-      .serve[Text.Html](Endpoint[IO].classpathAsset("/index.html"))
+      .serve[Text.Plain](healthCheckEndpoint.hc)
+      .serve[Text.Plain](renderEndpoint.create(new URL(s"${eventURL()}")))
+      .serve[Application.Javascript](resourceEndpoint.createContentJS)
+      .serve[Text.Html](resourceEndpoint.createContentHTML)
 
     val server =
       Http.server.withAdmissionControl
@@ -41,6 +38,7 @@ object Godfather extends TwitterServer {
       server.close()
     }
 
+    logger.info(s"Godfather Ready!! ☕️")
     Await.ready(adminHttpServer)
   }
 }

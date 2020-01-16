@@ -5,5 +5,5 @@ import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.twitter.io.Buf
 
 trait RenderUsecase {
-  def exec(event: ConnpassEvent): IO[Buf]
+  def exec(event: ConnpassEvent): IO[Unit]
 }

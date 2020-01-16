@@ -6,10 +6,8 @@ import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepository
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
 import com.github.cndjp.godfather.usecase.utils.GodfatherUsecaseUtils
-import com.twitter.io.Buf
 import com.typesafe.scalalogging.LazyLogging
-
-import scala.io.Source
+import cats.implicits._
 
 class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
                         connpassParticipantRepository: ConnpassParticipantRepository)
@@ -18,7 +16,7 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
     with LazyLogging {
   // cards.htmlがレンダリングして最後にindex.htmlを返す
 
-  override def exec(event: ConnpassEvent): IO[Buf] =
+  override def exec(event: ConnpassEvent): IO[Unit] =
     for {
       // resourcesPath/cards.htmlがあったらそのまま、なかったら作る
       cardHTML <- IO(File(s"$resourcesPath/cards.html").createFileIfNotExists())
@@ -36,14 +34,7 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
       output <- connpassParticipantRepository.parseParticipantList(title, participants)
 
       // 最後にoutputをcards.htmlのファイルに書き込む
-      _ <- IO(cardHTML.write(output))
-
-      // index.htmlを返す
-      indexHTML <- Resource
-                    .fromAutoCloseable(IO(Source.fromFile(s"$resourcesPath/index.html")))
-                    .use(file => IO(Buf.Utf8(file.mkString)))
-
-      _ <- IO(logger.info("Finish for rendering!!"))
-    } yield indexHTML
+      _ <- IO(cardHTML.write(output)) *> IO(logger.info("Finish for rendering!!"))
+    } yield ()
 
 }
