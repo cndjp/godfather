@@ -32,10 +32,10 @@ class RenderEndpointSpec extends GodfatherTestSupport {
           .awaitOutputUnsafe()
 
         val actualStatus = maybeResult.map(_.status).get
-        val actualHTML = maybeResult.map(_.value).get
+        val actualHeader = maybeResult.map(_.headers).get
 
-        actualStatus shouldBe Status.Ok
-        actualHTML shouldBe expectHTML
+        actualStatus shouldBe Status.SeeOther
+        actualHeader("Location") shouldBe "/index.html"
       }
     }
   }

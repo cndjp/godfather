@@ -57,10 +57,9 @@ class RederUsecaseSpec extends GodfatherTestSupport {
           .returning(IO(dummyCardHTML))
           .once()
 
-        val actual = mockUsecase
+        mockUsecase
           .exec(ConnpassEvent(new URL("https://cnd.connpass.com/event/154414/")))
           .unsafeRunSync()
-        Buf.Utf8.unapply(actual).get shouldBe expectHTML
       }
     }
   }
