@@ -34,7 +34,7 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
       output <- connpassParticipantRepository.parseParticipantList(title, participants)
 
       // 最後にoutputをcards.htmlのファイルに書き込む
-      _ <- IO(cardHTML.write(output)) *> IO(logger.info("Finish for rendering!!"))
+      _ <- IO(cardHTML.write(output)) *> IO(logger.info("Finish for rendering!!⭐️"))
     } yield ()
 
 }
