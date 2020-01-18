@@ -6,6 +6,7 @@ import java.util.UUID
 
 import cats.syntax.all._
 import cats.effect.IO
+import com.github.cndjp.godfather.domain.adapter.scrape.ScrapeAdapter
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import org.jsoup.Jsoup
@@ -25,18 +26,15 @@ import com.github.cndjp.godfather.exception.GodfatherException.{
 import com.typesafe.scalalogging.LazyLogging
 import org.jsoup.nodes.Element
 
-class ConnpassEventRepositoryImpl extends ConnpassEventRepository with LazyLogging {
+class ConnpassEventRepositoryImpl(scapeAdapter: ScrapeAdapter)
+    extends ConnpassEventRepository
+    with LazyLogging {
   // イベントのタイトルを持ってくる
   override def getEventTitle(event: ConnpassEvent): IO[String] =
     for {
-      result <- try IO(
-                 Jsoup
-                   .connect(event.url.toString)
-                   .get()
-                   .select("meta[itemprop=name]")
-                   .attr("content"))
-               catch {
-                 case e: IOException => IO.raiseError(GodfatherRendererException(e.getMessage))
+      result <- scapeAdapter.getDocument(event.url.toString).flatMap {
+                 case Right(doc) => IO(doc.select("meta[itemprop=name]").attr("content"))
+                 case Left(e)    => IO.raiseError(GodfatherRendererException(e.getMessage))
                }
     } yield result
 
