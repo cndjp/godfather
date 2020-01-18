@@ -1,4 +1,4 @@
-package com.github.cndjp.godfather.domain.adapter.scrape
+package com.github.cndjp.godfather.infrastructure.adapter.scrape
 
 import java.io.IOException
 

@@ -6,7 +6,6 @@ import java.util.UUID
 
 import cats.syntax.all._
 import cats.effect.IO
-import com.github.cndjp.godfather.domain.adapter.scrape.ScrapeAdapter
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import org.jsoup.Jsoup
@@ -23,6 +22,7 @@ import com.github.cndjp.godfather.exception.GodfatherException.{
   GodfatherGeneralException,
   GodfatherRendererException
 }
+import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 import com.typesafe.scalalogging.LazyLogging
 import org.jsoup.nodes.Element
 

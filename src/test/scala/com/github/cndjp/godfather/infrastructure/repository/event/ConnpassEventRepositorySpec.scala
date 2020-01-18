@@ -1,6 +1,6 @@
 package com.github.cndjp.godfather.infrastructure.repository.event
 
-import com.github.cndjp.godfather.domain.adapter.scrape.ScrapeAdapter
+import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 import com.github.cndjp.godfather.support.GodfatherTestSupport
 
 class ConnpassEventRepositorySpec extends GodfatherTestSupport {

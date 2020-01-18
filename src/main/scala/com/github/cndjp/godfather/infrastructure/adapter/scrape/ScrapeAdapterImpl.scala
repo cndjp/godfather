@@ -3,7 +3,6 @@ package com.github.cndjp.godfather.infrastructure.adapter.scrape
 import java.io.IOException
 
 import cats.effect.IO
-import com.github.cndjp.godfather.domain.adapter.scrape.ScrapeAdapter
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
