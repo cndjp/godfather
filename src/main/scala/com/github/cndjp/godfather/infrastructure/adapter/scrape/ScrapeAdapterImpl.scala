@@ -4,8 +4,11 @@ import java.io.IOException
 
 import cats.effect.IO
 import com.github.cndjp.godfather.domain.adapter.scrape.ScrapeAdapter
+import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
 class ScrapeAdapterImpl extends ScrapeAdapter {
-  override def getDocument(url: String): IO[Either[IOException, Document]] = ???
+  override def getDocument(url: String): IO[Either[IOException, Document]] =
+    try IO(Right(Jsoup.connect(url).get()))
+    catch { case e: IOException => IO(Left(e)) }
 }

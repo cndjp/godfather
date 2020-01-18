@@ -41,9 +41,9 @@ class ConnpassEventRepositoryImpl(scapeAdapter: ScrapeAdapter)
   // コンパスのイベントURLから登録者を持ってくる
   override def getElements(event: ConnpassEvent): IO[Seq[(ParticipantStatus, Elements)]] =
     for {
-      document <- try IO(Jsoup.connect(event.getParticipantsListUrl).get())
-                 catch {
-                   case e: IOException => IO.raiseError(GodfatherRendererException(e.getMessage))
+      document <- scapeAdapter.getDocument(event.url.toString).flatMap {
+                   case Right(doc) => IO.pure(doc)
+                   case Left(e)    => IO.raiseError(GodfatherRendererException(e.getMessage))
                  }
       result <- ParticipantStatus.values
                  .filterNot(_ == CANCELLED)
