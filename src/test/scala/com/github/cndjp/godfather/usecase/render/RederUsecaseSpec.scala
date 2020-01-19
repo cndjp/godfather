@@ -57,7 +57,7 @@ class RederUsecaseSpec extends GodfatherTestSupport {
           .once()
 
         mockUsecase
-          .exec(ConnpassEvent(new URL("https://cnd.connpass.com/event/154414/")))
+          .exec(ConnpassEvent(new URL("https://cnd.connpass.com/event/dummy/")))
           .unsafeRunSync()
       }
     }
