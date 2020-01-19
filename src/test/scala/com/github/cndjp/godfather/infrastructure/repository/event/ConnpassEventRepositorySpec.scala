@@ -14,7 +14,7 @@ class ConnpassEventRepositorySpec extends GodfatherTestSupport {
   val mockRepository = new ConnpassEventRepositoryImpl(mockScrapeAdapter)
 
   describe("#getEventTitle") {
-    describe("指定のエンドポイントを叩くと、") {
+    describe("指定の形式のHTMLが入力されると、") {
       it("想定通りのイベントタイトルが返って来ること") {
         val html = """<meta itemprop="name" content="水の呼吸勉強会" />"""
 
