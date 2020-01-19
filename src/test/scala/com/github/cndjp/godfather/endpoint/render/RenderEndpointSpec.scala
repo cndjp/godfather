@@ -28,7 +28,7 @@ class RenderEndpointSpec extends GodfatherTestSupport {
           .returning(IO(expectHTML))
 
         val maybeResult = mockEndpoint
-          .create(new URL("https://cnd.connpass.com/event/154414/"))(Input.get("/render"))
+          .create(new URL("https://cnd.connpass.com/event/dummy/"))(Input.get("/render"))
           .awaitOutputUnsafe()
 
         val actualStatus = maybeResult.map(_.status).get
