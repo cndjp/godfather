@@ -76,11 +76,11 @@ class ConnpassParticipantRepositorySpec extends GodfatherTestSupport {
     }
   }
 
-  describe("#parseParticipantList") {
+  describe("#renderParticipantList") {
     describe("指定のConnpassParticipantのリスト入れると") {
       it("想定通りのHTMLが返って来ること") {
         val actual = mockParticipantRepository
-          .parseParticipantList(
+          .renderParticipantList(
             "水の呼吸勉強会",
             Seq(
               ConnpassParticipant(

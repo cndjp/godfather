@@ -52,7 +52,7 @@ class RederUsecaseSpec extends GodfatherTestSupport {
                   new URL("http://exmple/image/1")))))
           .once()
         (mockConnpassParticipantRepository
-          .parseParticipantList(_: String, _: Seq[ConnpassParticipant]))
+          .renderParticipantList(_: String, _: Seq[ConnpassParticipant]))
           .expects(*, *)
           .returning(IO(dummyCardHTML))
           .once()
