@@ -19,7 +19,7 @@ class ConnpassEventRepositorySpec extends GodfatherTestSupport {
       it("想定通りのイベントタイトルが返って来ること") {
         (mockScrapeAdapter.getDocument _)
           .expects(*)
-          .returning(IO(Right(Jsoup.parse(mockHTML))))
+          .returning(IO(Right(Jsoup.parse(mockConnpassHTML))))
           .once()
 
         val maybeResult = mockRepository
@@ -36,7 +36,7 @@ class ConnpassEventRepositorySpec extends GodfatherTestSupport {
       it("想定通りのHTMLエレメントとstatusが返って来ること") {
         (mockScrapeAdapter.getDocument _)
           .expects(*)
-          .returning(IO(Right(Jsoup.parse(mockHTML))))
+          .returning(IO(Right(Jsoup.parse(mockConnpassHTML))))
           .once()
 
         val actualResult = mockRepository
