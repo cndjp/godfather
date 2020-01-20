@@ -5,7 +5,7 @@ import java.util.UUID
 
 import cats.effect.IO
 import com.fasterxml.jackson.annotation.ObjectIdGenerators.UUIDGenerator
-import com.github.cndjp.godfather.domain.cards.Cards
+import com.github.cndjp.godfather.domain.cards.RenderedCards
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepository
@@ -28,7 +28,7 @@ class RederUsecaseSpec extends GodfatherTestSupport {
   describe("#exec") {
     describe("実行すると") {
       it("エラーなく終了出来ること") {
-        val dummyCardHTML = Cards("<h1>ダミーのカードだよん</h1>")
+        val dummyCardHTML = RenderedCards("<h1>ダミーのカードだよん</h1>")
         (mockConnpassEventRepository.getEventTitle _).expects(*).returning(IO("水の呼吸勉強会")).once()
         (mockConnpassEventRepository.getParticipantElements _)
           .expects(*)

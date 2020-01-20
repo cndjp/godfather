@@ -5,7 +5,7 @@ import java.net.URL
 
 import cats.implicits._
 import cats.effect.IO
-import com.github.cndjp.godfather.domain.cards.Cards
+import com.github.cndjp.godfather.domain.cards.RenderedCards
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
 import com.github.cndjp.godfather.domain.user_elements.UserElements
@@ -61,7 +61,8 @@ class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
     } yield result
 
   // 登録者リストをパースしてcards.htmlに書き込むHTMLの文字列を返す
-  override def parseParticipantList(title: String, input: Seq[ConnpassParticipant]): IO[Cards] =
+  override def parseParticipantList(title: String,
+                                    input: Seq[ConnpassParticipant]): IO[RenderedCards] =
     for {
       adjust <- IO {
                  if (input.size % 2 == 1)
@@ -117,7 +118,7 @@ class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                      appendedSeq <- IO(rSeq ++ renderUnit)
                    } yield appendedSeq
                }
-    } yield Cards((result :+ "</div>").mkString("\n"))
+    } yield RenderedCards((result :+ "</div>").mkString("\n"))
 
   // connpassのURLからfetchしてきたHTMLエレメントを加工して、利用しやすい形の登録者全員のHTMLにして返す
   private[this] def element2Users(elems: Elements): IO[UserElements] =
