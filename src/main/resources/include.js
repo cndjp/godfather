@@ -1,5 +1,4 @@
 function include(filename, afterfunc) {
-
     include.seq = (include.seq)? include.seq + 1: 1;
   
     var id = new Date().getTime() + "-" + include.seq;
