@@ -2,18 +2,22 @@ package com.github.cndjp.godfather.infrastructure.repository.participant
 
 import java.io.IOException
 import java.net.URL
+
 import cats.implicits._
 import cats.effect.IO
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
 import com.github.cndjp.godfather.domain.user_elements.UserElements
 import com.github.cndjp.godfather.exception.GodfatherException.GodfatherRendererException
+import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 import com.typesafe.scalalogging.LazyLogging
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 
-class ConnpassParticipantRepositoryImpl extends ConnpassParticipantRepository with LazyLogging {
+class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
+    extends ConnpassParticipantRepository
+    with LazyLogging {
   // HTMLのエレメントから、登録者リストを返す
   override def element2Participants(
       input: Seq[(ParticipantStatus, Elements)]): IO[Seq[ConnpassParticipant]] =
@@ -30,17 +34,17 @@ class ConnpassParticipantRepositoryImpl extends ConnpassParticipantRepository wi
                                         for {
                                           unitSeq <- unit
                                           displayName <- IO(elem.select("p.display_name a").text())
-                                          userDoc <- try IO(
-                                                      Jsoup
-                                                        .connect(elem
+                                          userDoc <- scrapeAdapter
+                                                      .getDocument(
+                                                        elem
                                                           .select("p.display_name a")
                                                           .attr("href"))
-                                                        .get())
-                                                    catch {
-                                                      case e: IOException =>
-                                                        IO.raiseError(
-                                                          GodfatherRendererException(e.getMessage))
-                                                    }
+                                                      .flatMap {
+                                                        case Right(doc) => IO.pure(doc)
+                                                        case Left(e) =>
+                                                          IO.raiseError(GodfatherRendererException(
+                                                            e.getMessage))
+                                                      }
                                           participant <- IO(
                                                           ConnpassParticipant(displayName, userDoc))
                                           appendedUnitSeq <- IO(userCounter += 1) *>
@@ -122,49 +126,49 @@ class ConnpassParticipantRepositoryImpl extends ConnpassParticipantRepository wi
                  .foldLeft(IO.pure(new Elements())) { (init, item) =>
                    for {
                      initElems <- init
-                     _ <- IO {
-                           val paginatedUserListLink = item
-                             .select("tr.empty td[colspan=2] a")
-                           if (paginatedUserListLink.isEmpty)
-                             initElems.add(item)
+                     paginatedUserListLink <- IO(item.select("tr.empty td[colspan=2] a"))
+                     _ <- if (paginatedUserListLink.isEmpty)
+                           IO(initElems.add(item))
+                         else {
+                           val paginatedUserListUrl =
+                             paginatedUserListLink
+                               .first()
+                               .attr("href")
+                           if (paginatedUserListUrl == null || !paginatedUserListUrl
+                                 .contains("/ptype/"))
+                             IO(initElems.add(item))
                            else {
-                             val paginatedUserListUrl =
-                               paginatedUserListLink
-                                 .first()
-                                 .attr("href")
-                             if (paginatedUserListUrl == null || !paginatedUserListUrl
-                                   .contains("/ptype/"))
-                               initElems.add(item)
-                             else {
-                               val page1 =
-                                 try Jsoup
-                                   .connect(paginatedUserListUrl)
-                                   .get()
-                                 catch {
-                                   case e: IOException =>
-                                     throw GodfatherRendererException(e.getMessage)
-                                 }
-                               initElems.add(page1)
-                               val participantsCount = page1
+                             var i = 2
+                             for {
+                               page1 <- scrapeAdapter
+                                         .getDocument(paginatedUserListUrl)
+                                         .flatMap {
+                                           case Right(doc) => IO.pure(doc)
+                                           case Left(e) =>
+                                             IO.raiseError(GodfatherRendererException(e.getMessage))
+                                         }
+                               _ <- IO(initElems.add(page1))
+                               participantsCount = page1
                                  .select("span.participants_count")
                                  .text()
                                  .replace("人", "")
                                  .toInt
-                               val lastPage = participantsCount / 100 + 1
-                               var i = 2
-                               while (i <= lastPage) {
-                                 val pageX =
-                                   try Jsoup
-                                     .connect(paginatedUserListUrl + "?page=" + i)
-                                     .get()
-                                   catch {
-                                     case e: IOException =>
-                                       throw GodfatherRendererException(e.getMessage)
+                               lastPage = participantsCount / 100 + 1
+                               _ <- IO {
+                                     while (i <= lastPage) {
+                                       val pageX =
+                                         try Jsoup
+                                           .connect(paginatedUserListUrl + "?page=" + i)
+                                           .get()
+                                         catch {
+                                           case e: IOException =>
+                                             throw GodfatherRendererException(e.getMessage)
+                                         }
+                                       initElems.add(pageX)
+                                       i += 1
+                                     }
                                    }
-                                 initElems.add(pageX)
-                                 i += 1
-                               }
-                             }
+                             } yield ()
                            }
                          }
                    } yield initElems
