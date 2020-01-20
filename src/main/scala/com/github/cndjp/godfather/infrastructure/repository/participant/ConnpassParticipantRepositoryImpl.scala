@@ -60,9 +60,9 @@ class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                }
     } yield result
 
-  // 登録者リストをパースしてcards.htmlに書き込むHTMLの文字列を返す
-  override def parseParticipantList(title: String,
-                                    input: Seq[ConnpassParticipant]): IO[RenderedCards] =
+  // 登録者リストをレンダリングしてcards.htmlに書き込むHTMLの文字列を返す
+  override def renderParticipantList(title: String,
+                                     input: Seq[ConnpassParticipant]): IO[RenderedCards] =
     for {
       adjust <- IO {
                  if (input.size % 2 == 1)

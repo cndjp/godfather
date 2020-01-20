@@ -6,6 +6,6 @@ import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, Parti
 import org.jsoup.select.Elements
 
 trait ConnpassParticipantRepository {
-  def parseParticipantList(title: String, input: Seq[ConnpassParticipant]): IO[RenderedCards]
+  def renderParticipantList(title: String, input: Seq[ConnpassParticipant]): IO[RenderedCards]
   def element2Participants(input: Seq[(ParticipantStatus, Elements)]): IO[Seq[ConnpassParticipant]]
 }
