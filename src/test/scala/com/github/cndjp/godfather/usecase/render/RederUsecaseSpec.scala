@@ -22,14 +22,14 @@ class RederUsecaseSpec extends GodfatherTestSupport {
   val mockUsecase = new RenderUsecaseImpl(
     mockConnpassEventRepository,
     mockConnpassParticipantRepository
-  ) { override lazy val resourcesPath: String = "./src/test/resources" }
+  ) { override lazy val resourcesPath: String = testResourcesPath }
 
   describe("#exec") {
     describe("指定のエンドポイントを叩くと、") {
       it("OK が返ってくること") {
         val dummyCardHTML = "<h1>ダミーのカードだよん</h1>"
         (mockConnpassEventRepository.getEventTitle _).expects(*).returning(IO("水の呼吸勉強会")).once()
-        (mockConnpassEventRepository.getElements _)
+        (mockConnpassEventRepository.getParticipantElements _)
           .expects(*)
           .returning(
             IO(

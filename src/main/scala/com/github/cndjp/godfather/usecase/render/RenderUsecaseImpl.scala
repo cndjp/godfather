@@ -8,6 +8,7 @@ import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticip
 import com.github.cndjp.godfather.usecase.utils.GodfatherUsecaseUtils
 import com.typesafe.scalalogging.LazyLogging
 import cats.implicits._
+import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 
 class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
                         connpassParticipantRepository: ConnpassParticipantRepository)
@@ -22,7 +23,7 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
       cardHTML <- IO(File(s"$resourcesPath/cards.html").createFileIfNotExists())
 
       // 登録者をconnpassのページからfetchしてくる
-      elements <- connpassEventRepository.getElements(event)
+      elements <- connpassEventRepository.getParticipantElements(event)
 
       // 登録者のHTMLエレメントをparticipantクラスに変換する
       participants <- connpassParticipantRepository.element2Participants(elements)

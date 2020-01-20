@@ -39,7 +39,8 @@ class ConnpassEventRepositoryImpl(scapeAdapter: ScrapeAdapter)
     } yield result
 
   // コンパスのイベントURLから登録者を持ってくる
-  override def getElements(event: ConnpassEvent): IO[Seq[(ParticipantStatus, Elements)]] =
+  override def getParticipantElements(
+      event: ConnpassEvent): IO[Seq[(ParticipantStatus, Elements)]] =
     for {
       document <- scapeAdapter.getDocument(event.url.toString).flatMap {
                    case Right(doc) => IO.pure(doc)
