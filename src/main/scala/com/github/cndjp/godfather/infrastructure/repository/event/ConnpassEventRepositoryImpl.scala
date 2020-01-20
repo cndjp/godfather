@@ -42,7 +42,7 @@ class ConnpassEventRepositoryImpl(scapeAdapter: ScrapeAdapter)
   override def getParticipantElements(
       event: ConnpassEvent): IO[Seq[(ParticipantStatus, Elements)]] =
     for {
-      document <- scapeAdapter.getDocument(event.url.toString).flatMap {
+      document <- scapeAdapter.getDocument(event.getParticipantsListUrl).flatMap {
                    case Right(doc) => IO.pure(doc)
                    case Left(e)    => IO.raiseError(GodfatherRendererException(e.getMessage))
                  }

@@ -138,7 +138,6 @@ class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                                  .contains("/ptype/"))
                              IO(initElems.add(item))
                            else {
-                             var i = 2
                              for {
                                page1 <- scrapeAdapter
                                          .getDocument(paginatedUserListUrl)
@@ -154,19 +153,23 @@ class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                                  .replace("人", "")
                                  .toInt
                                lastPage = participantsCount / 100 + 1
-                               _ <- IO {
-                                     while (i <= lastPage) {
-                                       val pageX =
-                                         try Jsoup
-                                           .connect(paginatedUserListUrl + "?page=" + i)
-                                           .get()
-                                         catch {
-                                           case e: IOException =>
-                                             throw GodfatherRendererException(e.getMessage)
-                                         }
-                                       initElems.add(pageX)
-                                       i += 1
-                                     }
+                               // Seq.tabulate(5 - 1)(_ + 2)
+                               // => Seq[Int] = List(2, 3, 4, 5)
+                               _ <- Seq.tabulate(lastPage - 1)(_ + 2).foldLeft(IO.unit) {
+                                     (init, page) =>
+                                       for {
+                                         _ <- init
+                                         pageX <- scrapeAdapter
+                                                   .getDocument(
+                                                     paginatedUserListUrl + "?page=" + page)
+                                                   .flatMap {
+                                                     case Right(doc) => IO.pure(doc)
+                                                     case Left(e) =>
+                                                       IO.raiseError(
+                                                         GodfatherRendererException(e.getMessage))
+                                                   }
+                                         _ <- IO(initElems.add(pageX))
+                                       } yield ()
                                    }
                              } yield ()
                            }
