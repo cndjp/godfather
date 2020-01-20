@@ -8,7 +8,6 @@ import com.github.cndjp.godfather.endpoint.render.RenderEndpoint
 import com.github.cndjp.godfather.support.GodfatherTestSupport
 import com.github.cndjp.godfather.usecase.render.RenderUsecase
 import com.twitter.finagle.http.Status
-import com.twitter.io.Buf
 import io.finch.Input
 
 class RenderEndpointSpec extends GodfatherTestSupport {
@@ -21,11 +20,10 @@ class RenderEndpointSpec extends GodfatherTestSupport {
   describe("#execRender") {
     describe("指定のエンドポイントを叩くと、") {
       it("OK が返ってくること") {
-        val expectHTML = Buf.Utf8("<h1>ダミーだにゃん</h1>")
         (mockRenderUsecase
           .exec(_: ConnpassEvent))
           .expects(*)
-          .returning(IO(expectHTML))
+          .returning(IO.unit)
 
         val maybeResult = mockEndpoint
           .create(new URL("https://cnd.connpass.com/event/dummy/"))(Input.get("/render"))
