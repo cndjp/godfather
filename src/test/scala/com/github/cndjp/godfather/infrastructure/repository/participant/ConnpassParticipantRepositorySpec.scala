@@ -106,6 +106,7 @@ class ConnpassParticipantRepositorySpec extends GodfatherTestSupport {
             )
           )
           .unsafeRunSync()
+          .doc
 
         Jsoup.parse(actual).outerHtml() shouldBe Jsoup.parse(mockCardsHTML).outerHtml()
       }
