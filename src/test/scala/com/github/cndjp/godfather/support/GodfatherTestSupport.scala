@@ -14,7 +14,13 @@ trait GodfatherTestSupport
     with MockFactory {
   val testResourcesPath: String = "./src/test/resources"
 
-  val mockHTML: String = {
+  lazy val mockCardsHTML: String = {
+    val mockHTMLFile = Source.fromFile(s"$testResourcesPath/cards.html")
+    try mockHTMLFile.mkString
+    finally mockHTMLFile.close
+  }
+
+  lazy val mockConnpassHTML: String = {
     val mockHTMLFile = Source.fromFile(s"$testResourcesPath/mock_connpass.html")
     try mockHTMLFile.mkString
     finally mockHTMLFile.close
