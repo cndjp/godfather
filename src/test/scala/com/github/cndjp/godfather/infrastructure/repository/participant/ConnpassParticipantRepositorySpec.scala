@@ -56,7 +56,6 @@ class ConnpassParticipantRepositorySpec extends GodfatherTestSupport {
 
         val result = mockParticipantRepository.element2Participants(eventResult).unsafeRunSync()
         result(0).name shouldBe "tanjiro"
-        result(0).name shouldBe "tanjiro"
         result(1).name shouldBe "zenitsu"
         result(2).name shouldBe "Ponyo"
         result(3).name shouldBe "Sousuke"
