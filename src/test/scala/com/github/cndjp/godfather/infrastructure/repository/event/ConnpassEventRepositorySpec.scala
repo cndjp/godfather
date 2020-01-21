@@ -3,7 +3,7 @@ package com.github.cndjp.godfather.infrastructure.repository.event
 import java.net.URL
 
 import cats.effect.IO
-import com.github.cndjp.godfather.domain.event.ConnpassEvent
+import com.github.cndjp.godfather.domain.event.{ConnpassEvent, Title}
 import com.github.cndjp.godfather.domain.participant.ParticipantStatus
 import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 import com.github.cndjp.godfather.support.GodfatherTestSupport
@@ -26,7 +26,7 @@ class ConnpassEventRepositorySpec extends GodfatherTestSupport {
           .getEventTitle(ConnpassEvent(new URL("https://cnd.connpass.com/event/dummy/")))
           .unsafeRunSync()
 
-        maybeResult shouldBe "水の呼吸勉強会"
+        maybeResult shouldBe Title("水の呼吸勉強会")
       }
     }
   }
@@ -43,13 +43,18 @@ class ConnpassEventRepositorySpec extends GodfatherTestSupport {
           .getParticipantElements(ConnpassEvent(new URL("https://cnd.connpass.com/event/dummy/")))
           .unsafeRunSync()
 
-        val actualOrganizerResults = actualResult.head._2.toArray(Array[Element]())
-        actualOrganizerResults.head.select("p.display_name a").text() shouldBe "tanjiro zenitsu"
+        val actualOrganizerResults =
+          actualResult(ParticipantStatus.ORGANIZER).elems.toArray(Array[Element]())
+        actualOrganizerResults.head.select("p.display_name a").text() shouldBe "tanjiro"
+        actualOrganizerResults(1).select("p.display_name a").text() shouldBe "zenitsu"
 
-        val actualParticipantResults = actualResult(1)._2.toArray(Array[Element]())
-        actualParticipantResults.head.select("p.display_name a").text() shouldBe "Ponyo Sousuke"
+        val actualParticipantResults =
+          actualResult(ParticipantStatus.PARTICIPANT).elems.toArray(Array[Element]())
+        actualParticipantResults.head.select("p.display_name a").text() shouldBe "Ponyo"
+        actualParticipantResults(1).select("p.display_name a").text() shouldBe "Sousuke"
 
-        val actualWaitResults = actualResult(2)._2.toArray(Array[Element]())
+        val actualWaitResults =
+          actualResult(ParticipantStatus.WAITLISTED).elems.toArray(Array[Element]())
         actualWaitResults.head.select("p.display_name a").text() shouldBe "カービィ"
 
         actualResult.foreach(_._1 should not be ParticipantStatus.CANCELLED)
