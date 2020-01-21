@@ -1,6 +1,6 @@
-package com.github.cndjp.godfather.domain.user_elements
+package com.github.cndjp.godfather.domain.elements.participants
 
 import org.jsoup.select.Elements
 
 // HTMLのドキュメントからUserを抽出したエレメントを他のHTMLエレメントと区別するための値クラス
-case class UserElements(elems: Elements) extends AnyVal
+case class ParticipantsElements(elems: Elements) extends AnyVal

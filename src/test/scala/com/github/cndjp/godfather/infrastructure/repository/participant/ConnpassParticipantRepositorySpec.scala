@@ -5,7 +5,7 @@ import java.util.UUID
 
 import cats.effect.IO
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
-import com.github.cndjp.godfather.domain.participant.ConnpassParticipant
+import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 import com.github.cndjp.godfather.infrastructure.repository.event.ConnpassEventRepositoryImpl
 import com.github.cndjp.godfather.support.GodfatherTestSupport
@@ -61,17 +61,28 @@ class ConnpassParticipantRepositorySpec extends GodfatherTestSupport {
             """<div id="side_area"><div class="mb_20 text_center"><a class="image_link" href="https://connpass.com/user/dummy/kirby.png"><img src="https://connpass.com/user/dummy/kirby.png" width="180" height="180" title="kirby" alt="kirby"></a></div>"""))))
           .once()
 
-        val result = mockParticipantRepository.element2Participants(eventResult).unsafeRunSync()
-        result(0).name shouldBe "tanjiro"
-        result(0).imageURL shouldBe new URL("https://connpass.com/user/dummy/tanjiro.png")
-        result(1).name shouldBe "zenitsu"
-        result(1).imageURL shouldBe new URL("https://connpass.com/user/dummy/zenitsu.png")
-        result(2).name shouldBe "Ponyo"
-        result(2).imageURL shouldBe new URL("https://connpass.com/user/dummy/ponyo.png")
-        result(3).name shouldBe "Sousuke"
-        result(3).imageURL shouldBe new URL("https://connpass.com/user/dummy/sousuke.png")
-        result(4).name shouldBe "カービィ"
-        result(4).imageURL shouldBe new URL("https://connpass.com/user/dummy/kirby.png")
+        val organizerResult = mockParticipantRepository
+          .element2Participant(eventResult(ParticipantStatus.ORGANIZER))
+          .unsafeRunSync()
+        organizerResult.head.name shouldBe "tanjiro"
+        organizerResult.head.imageURL shouldBe new URL(
+          "https://connpass.com/user/dummy/tanjiro.png")
+        organizerResult(1).name shouldBe "zenitsu"
+        organizerResult(1).imageURL shouldBe new URL("https://connpass.com/user/dummy/zenitsu.png")
+        val participantResult = mockParticipantRepository
+          .element2Participant(eventResult(ParticipantStatus.PARTICIPANT))
+          .unsafeRunSync()
+        participantResult.head.name shouldBe "Ponyo"
+        participantResult.head.imageURL shouldBe new URL(
+          "https://connpass.com/user/dummy/ponyo.png")
+        participantResult(1).name shouldBe "Sousuke"
+        participantResult(1).imageURL shouldBe new URL(
+          "https://connpass.com/user/dummy/sousuke.png")
+        val waitlistedResult = mockParticipantRepository
+          .element2Participant(eventResult(ParticipantStatus.WAITLISTED))
+          .unsafeRunSync()
+        waitlistedResult.head.name shouldBe "カービィ"
+        waitlistedResult.head.imageURL shouldBe new URL("https://connpass.com/user/dummy/kirby.png")
       }
     }
   }

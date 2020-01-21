@@ -8,6 +8,7 @@ import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticip
 import com.github.cndjp.godfather.usecase.utils.GodfatherUsecaseUtils
 import com.typesafe.scalalogging.LazyLogging
 import cats.implicits._
+import com.github.cndjp.godfather.domain.participant.ConnpassParticipant
 import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 
 class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
@@ -26,13 +27,20 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
       elements <- connpassEventRepository.getParticipantElements(event)
 
       // 登録者のHTMLエレメントをparticipantクラスに変換する
-      participants <- connpassParticipantRepository.element2Participants(elements)
+      participants <- elements.foldLeft(IO.pure(Seq.empty[ConnpassParticipant])) { (init, item) =>
+                       for {
+                         initSeq <- init
+                         elem <- IO(logger.info(s"Collect Participants: [${item._1}]")) *> connpassParticipantRepository
+                                  .element2Participant(item._2)
+                         appendedSeq <- IO(initSeq ++ elem)
+                       } yield appendedSeq
+                     }
 
       // イベントのタイトルをconnpassのページからfetchしてくる
       title <- connpassEventRepository.getEventTitle(event)
 
       // 登録者とイベントのタイトルをパースしてcards.htmlのファイルに書き込むHTMLの文字列を持ってくる
-      cards <- connpassParticipantRepository.renderParticipantList(title, participants)
+      cards <- connpassParticipantRepository.renderParticipantList(title.value, participants)
 
       // 最後にoutputをcards.htmlのファイルに書き込む
       _ <- IO(cardHTML.write(cards.doc)) *> IO(logger.info("Finish for rendering!!⭐️"))
