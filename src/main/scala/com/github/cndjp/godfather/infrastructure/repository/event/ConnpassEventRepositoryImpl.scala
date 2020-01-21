@@ -1,14 +1,9 @@
 package com.github.cndjp.godfather.infrastructure.repository.event
 
-import java.io.IOException
-import java.net.URL
-import java.util.UUID
-
-import cats.syntax.all._
 import cats.effect.IO
-import com.github.cndjp.godfather.domain.event.ConnpassEvent
+import com.github.cndjp.godfather.domain.elements.participants.ParticipantsElements
+import com.github.cndjp.godfather.domain.event.{ConnpassEvent, Title}
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
-import org.jsoup.Jsoup
 import org.jsoup.select.Elements
 import com.github.cndjp.godfather.domain.participant.ParticipantStatus.{
   CANCELLED,
@@ -17,7 +12,6 @@ import com.github.cndjp.godfather.domain.participant.ParticipantStatus.{
   WAITLISTED
 }
 import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepository
-import com.github.cndjp.godfather.domain.user_elements.UserElements
 import com.github.cndjp.godfather.exception.GodfatherException.{
   GodfatherGeneralException,
   GodfatherRendererException
@@ -26,60 +20,122 @@ import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 import com.typesafe.scalalogging.LazyLogging
 import org.jsoup.nodes.Element
 
-class ConnpassEventRepositoryImpl(scapeAdapter: ScrapeAdapter)
+class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
     extends ConnpassEventRepository
     with LazyLogging {
   // イベントのタイトルを持ってくる
-  override def getEventTitle(event: ConnpassEvent): IO[String] =
+  override def getEventTitle(event: ConnpassEvent): IO[Title] =
     for {
-      result <- scapeAdapter.getDocument(event.url.toString).flatMap {
+      result <- scrapeAdapter.getDocument(event.url.toString).flatMap {
                  case Right(doc) => IO(doc.select("meta[itemprop=name]").attr("content"))
                  case Left(e)    => IO.raiseError(GodfatherRendererException(e.getMessage))
                }
-    } yield result
+    } yield Title(result)
 
   // コンパスのイベントURLから登録者を持ってくる
   override def getParticipantElements(
-      event: ConnpassEvent): IO[Seq[(ParticipantStatus, Elements)]] =
+      event: ConnpassEvent): IO[Map[ParticipantStatus, ParticipantsElements]] =
     for {
-      document <- scapeAdapter.getDocument(event.getParticipantsListUrl).flatMap {
+      document <- scrapeAdapter.getDocument(event.getParticipantsListUrl).flatMap {
                    case Right(doc) => IO.pure(doc)
                    case Left(e)    => IO.raiseError(GodfatherRendererException(e.getMessage))
                  }
       result <- ParticipantStatus.values
                  .filterNot(_ == CANCELLED)
-                 .foldLeft(IO.pure { Seq.empty[(ParticipantStatus, Elements)] }) { (init, status) =>
-                   for {
-                     initSeq <- init
-                     doc <- status match {
-                             case ORGANIZER =>
-                               IO.pure {
-                                 (ORGANIZER, document.select("div[class=concerned_area mb_30]"))
-                               }
-                             case PARTICIPANT =>
-                               IO.pure {
-                                 (
-                                   PARTICIPANT,
-                                   document.select("div[class=participation_table_area mb_20]"))
-                               }
-                             case WAITLISTED =>
-                               IO.pure {
-                                 (
-                                   WAITLISTED,
-                                   document.select("div[class=waitlist_table_area mb_20]"))
-                               }
+                 .foldLeft(IO.pure { Map.empty[ParticipantStatus, ParticipantsElements] }) {
+                   (init, status) =>
+                     for {
+                       initSeq <- init
+                       doc <- status match {
+                               case ORGANIZER =>
+                                 IO.pure {
+                                   (ORGANIZER, document.select("div[class=concerned_area mb_30]"))
+                                 }
+                               case PARTICIPANT =>
+                                 IO.pure {
+                                   (
+                                     PARTICIPANT,
+                                     document.select("div[class=participation_table_area mb_20]"))
+                                 }
+                               case WAITLISTED =>
+                                 IO.pure {
+                                   (
+                                     WAITLISTED,
+                                     document.select("div[class=waitlist_table_area mb_20]"))
+                                 }
 //                             case CANCELLED =>
 //                               IO.pure {
 //                                 elements :+= (CANCELLED, document.select(
 //                                   "div[class=cancelled_table_area mb_20]"))
 //                               }
-                             case _ =>
-                               IO.raiseError(
-                                 GodfatherGeneralException("想定外のParticipantStatusを検知しました"))
-                           }
-                     appendedSeq <- IO(initSeq :+ doc)
-                   } yield appendedSeq
+                               case _ =>
+                                 IO.raiseError(
+                                   GodfatherGeneralException("想定外のParticipantStatusを検知しました"))
+                             }
+                       pDoc <- createParticipantsElements(doc._2)
+                       appendedSeq <- IO(initSeq + (doc._1 -> pDoc))
+                     } yield appendedSeq
                  }
     } yield result
 
+  // connpassのURLからfetchしてきたHTMLエレメントを加工して、利用しやすい形の登録者全員のHTMLにして返す
+  private[this] def createParticipantsElements(elems: Elements): IO[ParticipantsElements] =
+    for {
+      result <- elems
+                 .toArray(Array[Element]())
+                 .foldLeft(IO.pure(new Elements())) { (init, item) =>
+                   for {
+                     initElems <- init
+                     paginatedUserListLink <- IO(item.select("tr.empty td[colspan=2] a"))
+                     _ <- if (paginatedUserListLink.isEmpty)
+                           IO(initElems.add(item))
+                         else {
+                           val paginatedUserListUrl =
+                             paginatedUserListLink
+                               .first()
+                               .attr("href")
+                           if (paginatedUserListUrl == null || !paginatedUserListUrl
+                                 .contains("/ptype/"))
+                             IO(initElems.add(item))
+                           else {
+                             for {
+                               page1 <- scrapeAdapter
+                                         .getDocument(paginatedUserListUrl)
+                                         .flatMap {
+                                           case Right(doc) => IO.pure(doc)
+                                           case Left(e) =>
+                                             IO.raiseError(GodfatherRendererException(e.getMessage))
+                                         }
+                               _ <- IO(initElems.add(page1))
+                               participantsCount = page1
+                                 .select("span.participants_count")
+                                 .text()
+                                 .replace("人", "")
+                                 .toInt
+                               lastPage = participantsCount / 100 + 1
+                               // Seq.tabulate(5 - 1)(_ + 2)
+                               // => Seq[Int] = List(2, 3, 4, 5)
+                               _ <- Seq.tabulate(lastPage - 1)(_ + 2).foldLeft(IO.unit) {
+                                     (init, page) =>
+                                       for {
+                                         _ <- init
+                                         pageX <- scrapeAdapter
+                                                   .getDocument(
+                                                     paginatedUserListUrl + "?page=" + page)
+                                                   .flatMap {
+                                                     case Right(doc) => IO.pure(doc)
+                                                     case Left(e) =>
+                                                       IO.raiseError(
+                                                         GodfatherRendererException(e.getMessage))
+                                                   }
+                                         _ <- IO(initElems.add(pageX))
+                                       } yield ()
+                                   }
+                             } yield ()
+                           }
+                         }
+                   } yield initElems
+                 }
+      users <- IO.pure(result.select("td.user .user_info"))
+    } yield ParticipantsElements(users)
 }
