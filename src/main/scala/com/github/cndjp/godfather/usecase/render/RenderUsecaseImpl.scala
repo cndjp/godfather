@@ -28,7 +28,7 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
       participants <- elements.foldLeft(IO.pure(Seq.empty[ConnpassParticipant])) { (init, item) =>
                        for {
                          initSeq <- init
-                         elem <- IO(logger.info(s"Collect Participants: [${item._1}]")) *> connpassParticipantRepository
+                         elem <- IO(logger.info(s"Collect Participants: [${item._1.name}]")) *> connpassParticipantRepository
                                   .element2Participant(item._2)
                          appendedSeq <- IO(initSeq ++ elem)
                        } yield appendedSeq

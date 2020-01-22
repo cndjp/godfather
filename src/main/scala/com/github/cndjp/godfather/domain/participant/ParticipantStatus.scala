@@ -2,9 +2,7 @@ package com.github.cndjp.godfather.domain.participant
 
 import enumeratum._
 
-sealed abstract class ParticipantStatus(id: Int, name: String) extends EnumEntry {
-  def getName = this.name
-}
+sealed abstract class ParticipantStatus(id: Int, val name: String) extends EnumEntry
 
 case object ParticipantStatus extends Enum[ParticipantStatus] {
   case object ORGANIZER extends ParticipantStatus(1, "ORGANIZER")
