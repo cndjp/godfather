@@ -19,6 +19,8 @@ class RenderEndpoint extends IOEndpointOps with LazyLogging with GodfatherInterf
   // レンダリングしてindex.htmlにリダイレクトするエンドポイント
   private def execRender(url: URL): Endpoint[IO, Unit] =
     get("render") {
+      import com.github.cndjp.godfather.utils.ResourcesImplicits.mainResourcesPath._
+
       renderUsecase
         .exec(ConnpassEvent(url))
         .redeem(

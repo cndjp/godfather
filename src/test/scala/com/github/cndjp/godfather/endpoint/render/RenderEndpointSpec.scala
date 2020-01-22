@@ -20,6 +20,7 @@ class RenderEndpointSpec extends GodfatherTestSupport {
   describe("#execRender") {
     describe("指定のエンドポイントを叩くと、") {
       it("OK が返ってくること") {
+        import com.github.cndjp.godfather.utils.ResourcesImplicits.testResourcesPath._
         (mockRenderUsecase
           .exec(_: ConnpassEvent))
           .expects(*)

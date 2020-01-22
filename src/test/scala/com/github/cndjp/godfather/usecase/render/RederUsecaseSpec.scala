@@ -24,11 +24,13 @@ class RederUsecaseSpec extends GodfatherTestSupport {
   val mockUsecase = new RenderUsecaseImpl(
     mockConnpassEventRepository,
     mockConnpassParticipantRepository
-  ) { override lazy val resourcesPath: String = testResourcesPath }
+  )
 
   describe("#exec") {
     describe("実行すると") {
       it("エラーなく終了出来ること") {
+        import com.github.cndjp.godfather.utils.ResourcesImplicits.testResourcesPath._
+
         val dummyCardHTML = RenderedCards("<h1>ダミーのカードだよん</h1>")
         (mockConnpassEventRepository.getEventTitle _)
           .expects(*)

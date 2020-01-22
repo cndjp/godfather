@@ -5,7 +5,6 @@ import cats.effect.{IO, Resource}
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepository
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
-import com.github.cndjp.godfather.usecase.utils.GodfatherUsecaseUtils
 import com.typesafe.scalalogging.LazyLogging
 import cats.implicits._
 import com.github.cndjp.godfather.domain.participant.ConnpassParticipant
@@ -14,11 +13,10 @@ import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
                         connpassParticipantRepository: ConnpassParticipantRepository)
     extends RenderUsecase
-    with GodfatherUsecaseUtils
     with LazyLogging {
   // cards.htmlがレンダリングして最後にindex.htmlを返す
 
-  override def exec(event: ConnpassEvent): IO[Unit] =
+  override def exec(event: ConnpassEvent)(implicit resourcesPath: String): IO[Unit] =
     for {
       // resourcesPath/cards.htmlがあったらそのまま、なかったら作る
       cardHTML <- IO(File(s"$resourcesPath/cards.html").createFileIfNotExists())
