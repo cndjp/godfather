@@ -3,7 +3,7 @@ package com.github.cndjp.godfather.infrastructure.repository.event
 import java.net.URL
 
 import cats.effect.IO
-import com.github.cndjp.godfather.domain.event.{ConnpassEvent, Title}
+import com.github.cndjp.godfather.domain.event.{ConnpassEvent, ConnpassTitle}
 import com.github.cndjp.godfather.domain.participant.ParticipantStatus
 import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 import com.github.cndjp.godfather.support.GodfatherTestSupport
@@ -26,7 +26,7 @@ class ConnpassEventRepositorySpec extends GodfatherTestSupport {
           .getEventTitle(ConnpassEvent(new URL("https://cnd.connpass.com/event/dummy/")))
           .unsafeRunSync()
 
-        maybeResult shouldBe Title("水の呼吸勉強会")
+        maybeResult shouldBe ConnpassTitle("水の呼吸勉強会")
       }
     }
   }

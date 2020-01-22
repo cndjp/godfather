@@ -2,7 +2,7 @@ package com.github.cndjp.godfather.infrastructure.repository.event
 
 import cats.effect.IO
 import com.github.cndjp.godfather.domain.elements.participants.ParticipantsElements
-import com.github.cndjp.godfather.domain.event.{ConnpassEvent, Title}
+import com.github.cndjp.godfather.domain.event.{ConnpassEvent, ConnpassTitle}
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import org.jsoup.select.Elements
 import com.github.cndjp.godfather.domain.participant.ParticipantStatus.{
@@ -24,13 +24,13 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
     extends ConnpassEventRepository
     with LazyLogging {
   // イベントのタイトルを持ってくる
-  override def getEventTitle(event: ConnpassEvent): IO[Title] =
+  override def getEventTitle(event: ConnpassEvent): IO[ConnpassTitle] =
     for {
       result <- scrapeAdapter.getDocument(event.url.toString).flatMap {
                  case Right(doc) => IO(doc.select("meta[itemprop=name]").attr("content"))
                  case Left(e)    => IO.raiseError(GodfatherRendererException(e.getMessage))
                }
-    } yield Title(result)
+    } yield ConnpassTitle(result)
 
   // コンパスのイベントURLから登録者を持ってくる
   override def getParticipantElements(

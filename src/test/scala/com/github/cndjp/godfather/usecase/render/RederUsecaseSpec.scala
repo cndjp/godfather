@@ -7,7 +7,7 @@ import cats.effect.IO
 import com.fasterxml.jackson.annotation.ObjectIdGenerators.UUIDGenerator
 import com.github.cndjp.godfather.domain.cards.RenderedCards
 import com.github.cndjp.godfather.domain.elements.participants.ParticipantsElements
-import com.github.cndjp.godfather.domain.event.{ConnpassEvent, Title}
+import com.github.cndjp.godfather.domain.event.{ConnpassEvent, ConnpassTitle}
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepository
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
@@ -32,7 +32,7 @@ class RederUsecaseSpec extends GodfatherTestSupport {
         val dummyCardHTML = RenderedCards("<h1>ダミーのカードだよん</h1>")
         (mockConnpassEventRepository.getEventTitle _)
           .expects(*)
-          .returning(IO(Title("水の呼吸勉強会")))
+          .returning(IO(ConnpassTitle("水の呼吸勉強会")))
           .once()
         (mockConnpassEventRepository.getParticipantElements _)
           .expects(*)
