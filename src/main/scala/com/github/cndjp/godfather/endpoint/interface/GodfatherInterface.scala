@@ -9,7 +9,7 @@ import com.github.cndjp.godfather.usecase.render.{RenderUsecase, RenderUsecaseIm
 import com.softwaremill.macwire._
 
 trait GodfatherInterface {
-  lazy val scapeAdapter: ScrapeAdapter = wire[ScrapeAdapterImpl]
+  lazy val scrapeAdapter: ScrapeAdapter = wire[ScrapeAdapterImpl]
   lazy val renderUsecase: RenderUsecase = wire[RenderUsecaseImpl]
   lazy val connpassEventRepository: ConnpassEventRepository = wire[ConnpassEventRepositoryImpl]
   lazy val connpassParticipantRepository: ConnpassParticipantRepository =
