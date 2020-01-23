@@ -13,6 +13,7 @@ import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepositor
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
 import com.github.cndjp.godfather.support.GodfatherTestSupport
 import com.twitter.io.Buf
+import org.jsoup.Jsoup
 import org.jsoup.select.Elements
 
 class RederUsecaseSpec extends GodfatherTestSupport {
@@ -64,6 +65,7 @@ class RederUsecaseSpec extends GodfatherTestSupport {
         mockUsecase
           .exec(ConnpassEvent(new URL("https://cnd.connpass.com/event/dummy/")))
           .unsafeRunSync()
+        Jsoup.parse(cardsHTML).outerHtml() shouldBe Jsoup.parse(dummyCardHTML.doc).outerHtml()
       }
     }
   }
