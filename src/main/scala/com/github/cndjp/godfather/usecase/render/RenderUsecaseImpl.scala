@@ -14,8 +14,8 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
                         connpassParticipantRepository: ConnpassParticipantRepository)
     extends RenderUsecase
     with LazyLogging {
-  // cards.htmlがレンダリングして最後にindex.htmlを返す
 
+  // cards.htmlがレンダリングして最後にindex.htmlを返す
   override def exec(event: ConnpassEvent)(implicit resourcesPath: String): IO[Unit] =
     for {
       // resourcesPath/cards.htmlがあったらそのまま、なかったら作る
