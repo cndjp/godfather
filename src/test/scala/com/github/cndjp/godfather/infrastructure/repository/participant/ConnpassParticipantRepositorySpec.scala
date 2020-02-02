@@ -4,7 +4,7 @@ import java.net.URL
 import java.util.UUID
 
 import cats.effect.IO
-import com.github.cndjp.godfather.domain.event.ConnpassEvent
+import com.github.cndjp.godfather.domain.event.{ConnpassEvent, ConnpassTitle}
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 import com.github.cndjp.godfather.infrastructure.repository.event.ConnpassEventRepositoryImpl
@@ -92,7 +92,7 @@ class ConnpassParticipantRepositorySpec extends GodfatherTestSupport {
       it("想定通りのHTMLが返って来ること") {
         val actual = mockParticipantRepository
           .renderParticipantList(
-            "水の呼吸勉強会",
+            ConnpassTitle("水の呼吸勉強会"),
             Seq(
               ConnpassParticipant(
                 UUID.randomUUID().toString,

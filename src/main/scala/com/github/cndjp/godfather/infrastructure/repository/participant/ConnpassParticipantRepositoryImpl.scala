@@ -7,6 +7,7 @@ import cats.implicits._
 import cats.effect.IO
 import com.github.cndjp.godfather.domain.cards.RenderedCards
 import com.github.cndjp.godfather.domain.elements.participants.ParticipantsElements
+import com.github.cndjp.godfather.domain.event.ConnpassTitle
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
 import com.github.cndjp.godfather.exception.GodfatherException.GodfatherRendererException
@@ -51,7 +52,7 @@ class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
     } yield participants
 
   // 登録者リストをレンダリングしてcards.htmlに書き込むHTMLの文字列を返す
-  override def renderParticipantList(title: String,
+  override def renderParticipantList(title: ConnpassTitle,
                                      input: Seq[ConnpassParticipant]): IO[RenderedCards] =
     for {
       adjust <- IO {
@@ -75,10 +76,10 @@ class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                                     var unit = Seq[String]()
                                     unit :+= """    <div class="row align-items-center border"> """
                                     unit :+= """        <div class="col-md-6 py-2 bg-info text-light"> """
-                                    unit :+= """            <h4 class="text-center">""" + title + "</h4>"
+                                    unit :+= """            <h4 class="text-center">""" + title.value + "</h4>"
                                     unit :+= """        </div> """
                                     unit :+= """        <div class="col-md-6 py-2 bg-info text-light border-left"> """
-                                    unit :+= """            <h4 class="text-center">""" + title + "</h4>"
+                                    unit :+= """            <h4 class="text-center">""" + title.value + "</h4>"
                                     unit :+= """        </div> """
                                     unit :+= """    </div> """
                                     unit :+= """    <div class="row align-items-center border"> """

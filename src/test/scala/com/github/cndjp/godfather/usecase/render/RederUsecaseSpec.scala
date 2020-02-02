@@ -4,7 +4,6 @@ import java.net.URL
 import java.util.UUID
 
 import cats.effect.IO
-import com.fasterxml.jackson.annotation.ObjectIdGenerators.UUIDGenerator
 import com.github.cndjp.godfather.domain.cards.RenderedCards
 import com.github.cndjp.godfather.domain.elements.participants.ParticipantsElements
 import com.github.cndjp.godfather.domain.event.{ConnpassEvent, ConnpassTitle}
@@ -12,7 +11,6 @@ import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, Parti
 import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepository
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
 import com.github.cndjp.godfather.support.GodfatherTestSupport
-import com.twitter.io.Buf
 import org.jsoup.Jsoup
 import org.jsoup.select.Elements
 
@@ -57,7 +55,7 @@ class RederUsecaseSpec extends GodfatherTestSupport {
                   new URL("http://exmple/image/1")))))
           .repeat(3)
         (mockConnpassParticipantRepository
-          .renderParticipantList(_: String, _: Seq[ConnpassParticipant]))
+          .renderParticipantList(_: ConnpassTitle, _: Seq[ConnpassParticipant]))
           .expects(*, *)
           .returning(IO(dummyCardHTML))
           .once()
