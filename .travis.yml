@@ -1,5 +1,9 @@
 language: scala
 
+sudo: required
+
+services: docker
+
 jdk: openjdk11
 
 scala: 2.12.8
@@ -21,3 +25,4 @@ notifications:
 script:
   - sbt test
   - sbt assembly
+  - docker build -t cndjp/godfather:latest .
