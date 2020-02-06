@@ -42,7 +42,7 @@ WORKDIR /opt/app
 COPY --from=builder /opt/app/target/scala-2.12/godfather.jar .
 
 RUN groupadd --non-unique --gid 23456 cndjp
-RUN useradd --non-unique --system --uid 12345 --gid 23456 qicoo
-USER qicoo
+RUN useradd --non-unique --system --uid 12345 --gid 23456 godfather
+USER godfather
 
 CMD java -jar /opt/app/godfather.jar -event-url $EVENT_URL

@@ -32,7 +32,7 @@ class RenderEndpointSpec extends GodfatherTestSupport {
         val actualStatus = maybeResult.map(_.status).get
         val actualHeader = maybeResult.map(_.headers).get
 
-        actualStatus shouldBe Status.SeeOther
+        actualStatus shouldBe Status.Found
         actualHeader("Location") shouldBe "/index.html"
       }
     }

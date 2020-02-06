@@ -29,8 +29,8 @@ class RenderEndpoint extends IOEndpointOps with LazyLogging with GodfatherInterf
             // 失敗したら 422
             UnprocessableEntity(GodfatherGeneralException(err.getMessage))
           },
-          // 成功したら 303で/index.htmlに遷移させる
-          _ => Output.unit(Status.SeeOther).withHeader("Location", "/index.html")
+          // 成功したら 302で/index.htmlに遷移させる
+          _ => Output.unit(Status.Found).withHeader("Location", "/index.html")
         )
     }
 }
