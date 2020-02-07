@@ -9,7 +9,7 @@ import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticip
 import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 import com.typesafe.scalalogging.LazyLogging
 import org.jsoup.nodes.Element
-import com.github.cndjp.godfather.utils.GodfatherDefaultObject._
+import com.github.cndjp.godfather.utils.GodfatherConstants._
 
 class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
     extends ConnpassParticipantRepository

@@ -3,7 +3,7 @@ package com.github.cndjp.godfather.domain.participant
 import java.net.URL
 import java.util.UUID
 import org.jsoup.nodes.{Document, Element}
-import com.github.cndjp.godfather.utils.GodfatherDefaultObject._
+import com.github.cndjp.godfather.utils.GodfatherConstants._
 
 // connpassイベントに参加する人を表すドメインクラス
 case class ConnpassParticipant(id: String, name: String, imageURL: URL) extends Participant
