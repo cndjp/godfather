@@ -19,7 +19,6 @@ import com.github.cndjp.godfather.exception.GodfatherException.{
 import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 import com.typesafe.scalalogging.LazyLogging
 import org.jsoup.nodes.Element
-import com.github.cndjp.godfather.utils.BooleanUtils._
 
 class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
     extends ConnpassEventRepository
@@ -88,17 +87,21 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                    for {
                      initElems <- init
                      paginatedUserListLink <- IO(item.select("tr.empty td[colspan=2] a"))
-                     _ <- paginatedUserListLink.isEmpty.toEither.fold(
+                     _ <- paginatedUserListLink.isEmpty match {
+                           // paginatedUserListLinkがContain
+                           case true => IO(initElems.add(item))
                            // paginatedUserListLinkがEmpty
-                           _ => {
+                           case false =>
                              val paginatedUserListUrl =
                                paginatedUserListLink
                                  .first()
                                  .attr("href")
                              (paginatedUserListUrl == null || !paginatedUserListUrl.contains(
-                               "/ptype/")).toEither.fold(
+                               "/ptype/")) match {
+                               // paginatedUserListUrlがnullじゃないし "/ptype/" を含んでもない文字列
+                               case true => IO(initElems.add(item))
                                // paginatedUserListUrlがnull、か "/ptype/" を含む文字列
-                               _ =>
+                               case false =>
                                  for {
                                    maybePage1 <- scrapeAdapter
                                                   .getDocument(paginatedUserListUrl)
@@ -133,14 +136,9 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                                                    }
                                            } yield ()
                                        )
-                                 } yield (),
-                               // paginatedUserListUrlがnullじゃないし "/ptype/" を含んでもない文字列
-                               _ => IO(initElems.add(item))
-                             )
-                           },
-                           // paginatedUserListLinkがContain
-                           _ => IO(initElems.add(item))
-                         )
+                                 } yield ()
+                             }
+                         }
                    } yield initElems
                  }
       users <- IO.pure(result.select("td.user .user_info"))
