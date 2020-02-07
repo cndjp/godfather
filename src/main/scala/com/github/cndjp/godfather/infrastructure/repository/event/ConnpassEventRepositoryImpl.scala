@@ -104,14 +104,12 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                                          e => IO(logger.error(e.getMessage)),
                                          page1 =>
                                            for {
-                                             participantsCount <- IO(
-                                                                   page1
-                                                                     .select(
-                                                                       "span.participants_count")
-                                                                     .text()
-                                                                     .replace("人", "")
-                                                                     .toInt)
                                              _ <- IO(initElems.add(page1))
+                                             participantsCount = page1
+                                               .select("span.participants_count")
+                                               .text()
+                                               .replace("人", "")
+                                               .toInt
                                              lastPage = participantsCount / 100 + 1
                                              // Seq.tabulate(5 - 1)(_ + 2)
                                              // => Seq[Int] = List(2, 3, 4, 5)
