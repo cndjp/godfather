@@ -56,11 +56,13 @@ class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
   override def renderParticipantList(title: ConnpassTitle,
                                      input: Seq[ConnpassParticipant]): IO[RenderedCards] =
     for {
+      // Seq[ConnpassParticipant]の数が奇数ならブランクを埋めておく
       adjust <- IO {
                  if (input.size % 2 == 1)
                    input :+ ConnpassParticipant("unknown", "blank", IMAGE_SOURCE_DEFAULT)
                  else input
                }
+      // 2個ずつレンダリングしたいので、factoryに2個ずつConnpassParticipantを詰める
       factory <- IO {
                   (0 to (input.size / 2))
                     .foldLeft(Seq.empty[(Int, ConnpassParticipant, ConnpassParticipant)]) {
@@ -69,6 +71,7 @@ class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                         init :+ (index, adjust(index), adjust(index + 1))
                     }
                 }
+      // 順番にレンダリングしていく
       result <- factory.foldLeft(IO.pure { Seq[String]("""<div class="container border">""") }) {
                  (r, item) =>
                    for {
