@@ -89,6 +89,7 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                      initElems <- init
                      paginatedUserListLink <- IO(item.select("tr.empty td[colspan=2] a"))
                      _ <- paginatedUserListLink.isEmpty.toEither.fold(
+                           // paginatedUserListLinkがEmpty
                            _ => {
                              val paginatedUserListUrl =
                                paginatedUserListLink
@@ -96,6 +97,7 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                                  .attr("href")
                              (paginatedUserListUrl == null || !paginatedUserListUrl.contains(
                                "/ptype/")).toEither.fold(
+                               // paginatedUserListUrlがnull、か "/ptype/" を含む文字列
                                _ =>
                                  for {
                                    maybePage1 <- scrapeAdapter
@@ -132,9 +134,11 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                                            } yield ()
                                        )
                                  } yield (),
+                               // paginatedUserListUrlがnullじゃないし "/ptype/" を含んでもない文字列
                                _ => IO(initElems.add(item))
                              )
                            },
+                           // paginatedUserListLinkがContain
                            _ => IO(initElems.add(item))
                          )
                    } yield initElems
