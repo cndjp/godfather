@@ -19,6 +19,7 @@ import com.github.cndjp.godfather.exception.GodfatherException.{
 import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 import com.typesafe.scalalogging.LazyLogging
 import org.jsoup.nodes.Element
+import com.github.cndjp.godfather.utils.BooleanUtils._
 
 class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
     extends ConnpassEventRepository
@@ -87,52 +88,57 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                    for {
                      initElems <- init
                      paginatedUserListLink <- IO(item.select("tr.empty td[colspan=2] a"))
-                     _ <- if (paginatedUserListLink.isEmpty)
-                           IO(initElems.add(item))
-                         else {
-                           val paginatedUserListUrl =
-                             paginatedUserListLink
-                               .first()
-                               .attr("href")
-                           if (paginatedUserListUrl == null || !paginatedUserListUrl
-                                 .contains("/ptype/"))
-                             IO(initElems.add(item))
-                           else
-                             for {
-                               maybePage1 <- scrapeAdapter
-                                              .getDocument(paginatedUserListUrl)
-                               _ <- maybePage1.fold(
-                                     e => IO(logger.error(e.getMessage)),
-                                     page1 =>
-                                       for {
-                                         participantsCount <- IO(
-                                                               page1
-                                                                 .select("span.participants_count")
-                                                                 .text()
-                                                                 .replace("人", "")
-                                                                 .toInt)
-                                         _ <- IO(initElems.add(page1))
-                                         lastPage = participantsCount / 100 + 1
-                                         // Seq.tabulate(5 - 1)(_ + 2)
-                                         // => Seq[Int] = List(2, 3, 4, 5)
-                                         _ <- Seq.tabulate(lastPage - 1)(_ + 2).foldLeft(IO.unit) {
-                                               (init, page) =>
-                                                 for {
-                                                   _ <- init
-                                                   _ <- scrapeAdapter
-                                                         .getDocument(
-                                                           paginatedUserListUrl + "?page=" + page)
-                                                         .flatMap {
-                                                           case Right(doc) => IO(initElems.add(doc))
-                                                           case Left(e) =>
-                                                             IO(logger.error(e.getMessage))
-                                                         }
-                                                 } yield ()
-                                             }
-                                       } yield ()
-                                   )
-                             } yield ()
-                         }
+                     _ <- paginatedUserListLink.isEmpty.toEither.fold(
+                           _ => {
+                             val paginatedUserListUrl =
+                               paginatedUserListLink
+                                 .first()
+                                 .attr("href")
+                             (paginatedUserListUrl == null || !paginatedUserListUrl.contains(
+                               "/ptype/")).toEither.fold(
+                               _ =>
+                                 for {
+                                   maybePage1 <- scrapeAdapter
+                                                  .getDocument(paginatedUserListUrl)
+                                   _ <- maybePage1.fold(
+                                         e => IO(logger.error(e.getMessage)),
+                                         page1 =>
+                                           for {
+                                             participantsCount <- IO(
+                                                                   page1
+                                                                     .select(
+                                                                       "span.participants_count")
+                                                                     .text()
+                                                                     .replace("人", "")
+                                                                     .toInt)
+                                             _ <- IO(initElems.add(page1))
+                                             lastPage = participantsCount / 100 + 1
+                                             // Seq.tabulate(5 - 1)(_ + 2)
+                                             // => Seq[Int] = List(2, 3, 4, 5)
+                                             _ <- Seq
+                                                   .tabulate(lastPage - 1)(_ + 2)
+                                                   .foldLeft(IO.unit) { (init, page) =>
+                                                     for {
+                                                       _ <- init
+                                                       _ <- scrapeAdapter
+                                                             .getDocument(
+                                                               paginatedUserListUrl + "?page=" + page)
+                                                             .flatMap {
+                                                               case Right(doc) =>
+                                                                 IO(initElems.add(doc))
+                                                               case Left(e) =>
+                                                                 IO(logger.error(e.getMessage))
+                                                             }
+                                                     } yield ()
+                                                   }
+                                           } yield ()
+                                       )
+                                 } yield (),
+                               _ => IO(initElems.add(item))
+                             )
+                           },
+                           _ => IO(initElems.add(item))
+                         )
                    } yield initElems
                  }
       users <- IO.pure(result.select("td.user .user_info"))
