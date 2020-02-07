@@ -97,42 +97,41 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                            if (paginatedUserListUrl == null || !paginatedUserListUrl
                                  .contains("/ptype/"))
                              IO(initElems.add(item))
-                           else {
+                           else
                              for {
-                               page1 <- scrapeAdapter
-                                         .getDocument(paginatedUserListUrl)
-                                         .flatMap {
-                                           case Right(doc) => IO.pure(doc)
-                                           case Left(e) =>
-                                             IO.raiseError(GodfatherRendererException(e.getMessage))
-                                         }
-                               _ <- IO(initElems.add(page1))
-                               participantsCount = page1
-                                 .select("span.participants_count")
-                                 .text()
-                                 .replace("人", "")
-                                 .toInt
-                               lastPage = participantsCount / 100 + 1
-                               // Seq.tabulate(5 - 1)(_ + 2)
-                               // => Seq[Int] = List(2, 3, 4, 5)
-                               _ <- Seq.tabulate(lastPage - 1)(_ + 2).foldLeft(IO.unit) {
-                                     (init, page) =>
+                               maybePage1 <- scrapeAdapter
+                                              .getDocument(paginatedUserListUrl)
+                               _ <- maybePage1.fold(
+                                     e => IO(logger.error(e.getMessage)),
+                                     page1 =>
                                        for {
-                                         _ <- init
-                                         pageX <- scrapeAdapter
-                                                   .getDocument(
-                                                     paginatedUserListUrl + "?page=" + page)
-                                                   .flatMap {
-                                                     case Right(doc) => IO.pure(doc)
-                                                     case Left(e) =>
-                                                       IO.raiseError(
-                                                         GodfatherRendererException(e.getMessage))
-                                                   }
-                                         _ <- IO(initElems.add(pageX))
+                                         participantsCount <- IO(
+                                                               page1
+                                                                 .select("span.participants_count")
+                                                                 .text()
+                                                                 .replace("人", "")
+                                                                 .toInt)
+                                         _ <- IO(initElems.add(page1))
+                                         lastPage = participantsCount / 100 + 1
+                                         // Seq.tabulate(5 - 1)(_ + 2)
+                                         // => Seq[Int] = List(2, 3, 4, 5)
+                                         _ <- Seq.tabulate(lastPage - 1)(_ + 2).foldLeft(IO.unit) {
+                                               (init, page) =>
+                                                 for {
+                                                   _ <- init
+                                                   _ <- scrapeAdapter
+                                                         .getDocument(
+                                                           paginatedUserListUrl + "?page=" + page)
+                                                         .flatMap {
+                                                           case Right(doc) => IO(initElems.add(doc))
+                                                           case Left(e) =>
+                                                             IO(logger.error(e.getMessage))
+                                                         }
+                                                 } yield ()
+                                             }
                                        } yield ()
-                                   }
+                                   )
                              } yield ()
-                           }
                          }
                    } yield initElems
                  }

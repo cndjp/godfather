@@ -1,14 +1,13 @@
 package com.github.cndjp.godfather.usecase.render
 
 import better.files._
-import cats.effect.{IO, Resource}
+import cats.effect.IO
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepository
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
 import com.typesafe.scalalogging.LazyLogging
 import cats.implicits._
 import com.github.cndjp.godfather.domain.participant.ConnpassParticipant
-import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 
 class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
                         connpassParticipantRepository: ConnpassParticipantRepository)
@@ -19,7 +18,7 @@ class RenderUsecaseImpl(connpassEventRepository: ConnpassEventRepository,
   override def exec(event: ConnpassEvent)(implicit resourcesPath: String): IO[Unit] =
     for {
       // resourcesPath/cards.htmlがあったらそのまま、なかったら作る
-      cardHTML <- IO(File(s"$resourcesPath/cards.html").createFileIfNotExists())
+      cardHTML <- IO.suspend(IO(File(s"$resourcesPath/cards.html").createFileIfNotExists()))
 
       // 登録者をconnpassのページからfetchしてくる
       elements <- connpassEventRepository.getParticipantElements(event)

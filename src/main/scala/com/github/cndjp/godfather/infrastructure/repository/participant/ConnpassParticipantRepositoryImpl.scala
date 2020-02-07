@@ -1,21 +1,15 @@
 package com.github.cndjp.godfather.infrastructure.repository.participant
 
-import java.io.IOException
-import java.net.URL
-
-import cats.implicits._
 import cats.effect.IO
 import com.github.cndjp.godfather.domain.cards.RenderedCards
 import com.github.cndjp.godfather.domain.elements.participants.ParticipantsElements
 import com.github.cndjp.godfather.domain.event.ConnpassTitle
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
-import com.github.cndjp.godfather.exception.GodfatherException.GodfatherRendererException
 import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 import com.typesafe.scalalogging.LazyLogging
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
-import org.jsoup.select.Elements
+import com.github.cndjp.godfather.utils.GodfatherDefaultObject._
 
 class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
     extends ConnpassParticipantRepository
@@ -31,22 +25,29 @@ class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                            for {
                              unitSeq <- unit
                              displayName <- IO(elem.select("p.display_name a").text())
-                             userDoc <- scrapeAdapter
-                                         .getDocument(
-                                           elem
-                                             .select("p.display_name a")
-                                             .attr("href"))
-                                         .flatMap {
-                                           case Right(doc) => IO.pure(doc)
-                                           case Left(e) =>
-                                             IO.raiseError(GodfatherRendererException(e.getMessage))
-                                         }
-                             participant <- IO(ConnpassParticipant(displayName, userDoc))
-                             appendedUnitSeq <- IO(userCounter += 1) *>
-                                                 IO(logger.info(
-                                                   s"${participant.name}: $userCounter / ${input.elems
-                                                     .size()}")) *>
-                                                 IO(unitSeq :+ participant)
+                             maybeUserDoc <- scrapeAdapter
+                                              .getDocument(
+                                                elem
+                                                  .select("p.display_name a")
+                                                  .attr("href"))
+                             appendedUnitSeq <- maybeUserDoc.fold(
+                                                 e =>
+                                                   for {
+                                                     _ <- IO(userCounter += 1)
+                                                     _ <- IO(logger.error(e.getMessage))
+                                                   } yield unitSeq,
+                                                 userDoc =>
+                                                   for {
+                                                     participant <- IO(
+                                                                     ConnpassParticipant(
+                                                                       displayName,
+                                                                       userDoc))
+                                                     _ <- IO(userCounter += 1)
+                                                     _ <- IO(logger.info(
+                                                           s"${participant.name}: $userCounter / ${input.elems
+                                                             .size()}"))
+                                                   } yield unitSeq :+ participant
+                                               )
                            } yield appendedUnitSeq
                        }
     } yield participants
@@ -57,11 +58,11 @@ class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
     for {
       adjust <- IO {
                  if (input.size % 2 == 1)
-                   input :+ ConnpassParticipant("", "", null)
+                   input :+ ConnpassParticipant("unknown", "blank", IMAGE_SOURCE_DEFAULT)
                  else input
                }
       factory <- IO {
-                  (0 until (input.size / 2))
+                  (0 to (input.size / 2))
                     .foldLeft(Seq.empty[(Int, ConnpassParticipant, ConnpassParticipant)]) {
                       (init, counter) =>
                         val index = counter * 2

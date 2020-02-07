@@ -8,4 +8,7 @@ object GodfatherException {
 
   case class GodfatherRendererException(why: String)
       extends GodfatherException(s"レンダリングに失敗しました: $why")
+
+  case class GodfatherScrapeException(why: String)
+      extends GodfatherException(s"スクレイピングに失敗しました: $why")
 }
