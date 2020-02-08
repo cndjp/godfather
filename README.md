@@ -14,18 +14,20 @@ $ java -jar target/scala-2.12/godfather.jar -event-url <Connpass Event URL>
 15:13:50.595 [main] INFO com.twitter.util.logging.Slf4jBridgeUtility$ - org.slf4j.bridge.SLF4JBridgeHandler installed.
 ...
 15:13:51.833 [main] INFO com.github.cndjp.godfather.Godfather$ - Scrape URL: https://cnd.connpass.com/event/154414/
-15:13:52.168 [main] INFO com.github.cndjp.godfather.Godfather$ - Godfather Ready!! ☕️
+15:56:19.989 [main] INFO com.github.cndjp.godfather.usecase.render.RenderUsecaseImpl - Collect Participants: [ORGANIZER]
+15:56:20.455 [main] INFO com.github.cndjp.godfather.infrastructure.repository.participant.ConnpassParticipantRepositoryImpl - nnao45: 1 / 14
+15:56:21.015 [main] INFO com.github.cndjp.godfather.infrastructure.repository.participant.ConnpassParticipantRepositoryImpl - nnao45: 2 / 14
+...
+15:57:57.060 [main] INFO com.github.cndjp.godfather.usecase.render.RenderUsecaseImpl - Finish for rendering!!⭐️
+15:57:57.168 [main] INFO com.github.cndjp.godfather.Godfather$ - Godfather Ready!! ☕️
+15:57:57.168 [main] INFO com.github.cndjp.godfather.Godfather$ - Please Click it 👉 http://localhost:8080/index.html
 ```
 
 2. Do Get Request This Server from Web Browser
 
 ```
-GET http://localhost:8080/render
+GET http://localhost:8080/index.html
 ```
-
-Please wait for a while...
-
-3.　Redirect!!
 
 # Build
 
