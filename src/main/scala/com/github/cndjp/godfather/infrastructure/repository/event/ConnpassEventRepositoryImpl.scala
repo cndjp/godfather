@@ -106,7 +106,7 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                                    maybePage1 <- scrapeAdapter
                                                   .getDocument(paginatedUserListUrl)
                                    _ <- maybePage1.fold(
-                                         e => IO(logger.error(e.getMessage)),
+                                         error => IO(logger.error(error.getMessage)),
                                          page1 =>
                                            for {
                                              _ <- IO(initElems.add(page1))
@@ -116,10 +116,7 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                                                .replace("人", "")
                                                .toInt
                                              lastPage = participantsCount / 100 + 1
-                                             // Seq.tabulate(5 - 1)(_ + 2)
-                                             // => Seq[Int] = List(2, 3, 4, 5)
-                                             _ <- Seq
-                                                   .tabulate(lastPage - 1)(_ + 2)
+                                             _ <- (2 to lastPage)
                                                    .foldLeft(IO.unit) { (init, page) =>
                                                      for {
                                                        _ <- init
