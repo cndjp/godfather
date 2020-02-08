@@ -1,5 +1,6 @@
 .idea
 project/project
+src/main/resources/cards.html
 project/target
 target/
 pom.xml.tag
