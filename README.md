@@ -29,6 +29,8 @@ $ java -jar target/scala-2.12/godfather.jar -event-url <Connpass Event URL>
 GET http://localhost:8080/index.html
 ```
 
+![demo](https://raw.githubusercontent.com/cndjp/godfather/master/src/main/resources/demo01.png)
+
 # Build
 
 ### Jar
