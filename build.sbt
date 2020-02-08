@@ -41,6 +41,7 @@ lazy val commonSettings = Seq(
     "org.scalacheck" %% "scalacheck" % "1.14.0",
     "org.mockito" % "mockito-core" % "2.7.22",
     "org.scalamock" %% "scalamock-scalatest-support" % "3.6.0",
+    "com.github.scopt" %% "scopt" % "3.7.1",
   ),
   test in assembly := {}
 )

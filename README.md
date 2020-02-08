@@ -10,7 +10,7 @@ Godfather is a name card creation tool for meetup events.
 
 ```bash
 $ sbt assembly
-$ java -jar target/scala-2.12/godfather.jar -event-url <Connpass Event URL>
+$ java -jar target/scala-2.12/godfather.jar --event-url <Connpass Event URL>
 15:13:50.595 [main] INFO com.twitter.util.logging.Slf4jBridgeUtility$ - org.slf4j.bridge.SLF4JBridgeHandler installed.
 ...
 15:13:51.833 [main] INFO com.github.cndjp.godfather.Godfather$ - Scrape URL: <Connpass Event URL>
@@ -20,7 +20,7 @@ $ java -jar target/scala-2.12/godfather.jar -event-url <Connpass Event URL>
 ...
 15:57:57.060 [main] INFO com.github.cndjp.godfather.usecase.render.RenderUsecaseImpl - Finish for rendering!!⭐️
 15:57:57.168 [main] INFO com.github.cndjp.godfather.Godfather$ - Godfather Ready!! ☕️
-15:57:57.168 [main] INFO com.github.cndjp.godfather.Godfather$ - Please Click it 👉 http://localhost:8080/index.html
+15:57:57.168 [main] INFO com.github.cndjp.godfather.Godfather$ - Please Check it 👉 http://localhost:8080/index.html
 ```
 
 2. Do Get Request This Server from Web Browser
@@ -50,7 +50,7 @@ docker build -t cndjp/godfather:latest --build-arg <Connpass Event URL> .
 ### Jar
 
 ```bash
-java -jar target/scala-2.12/godfather.jar -event-url <Connpass Event URL>
+java -jar target/scala-2.12/godfather.jar --event-url <Connpass Event URL>
 ```
 
 ### Docker

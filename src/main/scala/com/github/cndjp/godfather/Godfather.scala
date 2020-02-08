@@ -2,51 +2,67 @@ package com.github.cndjp.godfather
 
 import java.net.URL
 
-import cats.effect.IO
+import cats.effect.{ExitCode, IO, IOApp}
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.endpoint.hc.HealthCheckEndpoint
 import com.github.cndjp.godfather.endpoint.resource.ResourceEndpoint
 import com.github.cndjp.godfather.iface.GodfatherInterface
 import com.twitter.finagle.Http
-import com.twitter.util.Await
 import io.finch.Application
 import io.finch._
-import com.twitter.server.TwitterServer
+import cats.implicits._
+import com.github.cndjp.godfather.exception.GodfatherException.GodfatherParseArgsException
+import com.typesafe.scalalogging.LazyLogging
+import com.twitter.util.Await
+import scopt.OptionParser
 
-object Godfather extends TwitterServer with GodfatherInterface {
+object Godfather extends GodfatherInterface with IOApp with LazyLogging {
 
-  val eventURL =
-    flag("event-url", "", "Event URL (e.g. https://cnd.connpass.com/event/154414/)")
+  val healthCheckEndpoint = new HealthCheckEndpoint
+  val resourceEndpoint = new ResourceEndpoint
 
-  def main(): Unit = {
+  val api = Bootstrap
+    .serve[Text.Plain](healthCheckEndpoint.hc)
+    .serve[Application.Javascript](resourceEndpoint.createContentJS)
+    .serve[Text.Html](resourceEndpoint.createContentHTML)
+
+  val server =
+    Http.server.withAdmissionControl
+      .concurrencyLimit(maxConcurrentRequests = 10, maxWaiters = 10)
+      .serve(":8080", api.toService)
+
+  override def run(args: List[String]): IO[ExitCode] = {
     import com.github.cndjp.godfather.utils.ResourcesImplicits.mainResourcesPath._
 
-    logger.info(s"Scrape URL: ${eventURL()}")
-    val healthCheckEndpoint = new HealthCheckEndpoint
-    val resourceEndpoint = new ResourceEndpoint
+    case class Ops(url: String = "")
 
-    renderUsecase
-      .exec(ConnpassEvent(new URL(s"${eventURL()}")))
-      .handleErrorWith(e => IO(logger.warn(e.getMessage)))
-      .unsafeRunSync()
+    def initCmdParse: OptionParser[Ops] =
+      new OptionParser[Ops]("godfather") {
+        head("godfather", scala.sys.process.Process("git rev-parse HEAD").!!.trim)
 
-    val api = Bootstrap
-      .serve[Text.Plain](healthCheckEndpoint.hc)
-      .serve[Application.Javascript](resourceEndpoint.createContentJS)
-      .serve[Text.Html](resourceEndpoint.createContentHTML)
+        opt[String]('e', "event-url")
+          .action((x, c) => c.copy(url = x))
+          .text("""
+                  |  <value>: scrape connpass URL
+                  |           (e.g. https://cnd.connpass.com/event/154414/)
+                  |""".stripMargin)
+      }
 
-    val server =
-      Http.server.withAdmissionControl
-        .concurrencyLimit(maxConcurrentRequests = 10, maxWaiters = 10)
-        .serve(":8080", api.toService)
+    for {
+      eventURL <- initCmdParse.parse(args, Ops()).map(_.url) match {
+                   case Some(v) => IO(logger.info(s"Scrape URL: $v")) *> IO.pure(v)
+                   case None    => IO.raiseError(GodfatherParseArgsException(args.mkString(",")))
+                 }
 
-    onExit {
-      logger.info("graceful shutdown...")
-      server.close()
-    }
+      _ <- renderUsecase
+            .exec(ConnpassEvent(new URL(eventURL)))
 
-    logger.info(s"Godfather Ready!! ☕️")
-    logger.info(s"Please Click it 👉 http://localhost:8080/index.html")
-    Await.ready(adminHttpServer)
+      _ <- IO {
+            logger.info(s"Godfather Ready!! ☕️")
+            logger.info(s"Please Check it 👉 http://localhost:8080/index.html")
+          }
+
+      result <- IO(Await.ready(server)) *> IO.pure(ExitCode.Success)
+    } yield result
   }
 }

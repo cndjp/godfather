@@ -11,4 +11,7 @@ object GodfatherException {
 
   case class GodfatherScrapeException(why: String)
       extends GodfatherException(s"スクレイピングに失敗しました: $why")
+
+  case class GodfatherParseArgsException(why: String)
+      extends GodfatherException(s"引数のパースに失敗しました: $why")
 }
