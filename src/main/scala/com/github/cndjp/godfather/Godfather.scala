@@ -38,8 +38,6 @@ object Godfather extends GodfatherInterface with IOApp with LazyLogging {
 
     def initCmdParse: OptionParser[Ops] =
       new OptionParser[Ops]("godfather") {
-        head("godfather", scala.sys.process.Process("git rev-parse HEAD").!!.trim)
-
         opt[String]('e', "event-url")
           .action((x, c) => c.copy(url = x))
           .text("""
