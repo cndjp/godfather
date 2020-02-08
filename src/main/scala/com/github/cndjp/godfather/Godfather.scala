@@ -17,7 +17,7 @@ object Godfather extends TwitterServer {
     flag("event-url", "", "Event URL (e.g. https://cnd.connpass.com/event/154414/)")
 
   def main(): Unit = {
-    logger.info(s"レンダリングするイベントURL: ${eventURL()}")
+    logger.info(s"Render URL: ${eventURL()}")
     val renderEndpoint = new RenderEndpoint
     val healthCheckEndpoint = new HealthCheckEndpoint
     val resourceEndpoint = new ResourceEndpoint
