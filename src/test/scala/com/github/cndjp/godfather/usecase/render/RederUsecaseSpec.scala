@@ -3,6 +3,7 @@ package com.github.cndjp.godfather.usecase.render
 import java.net.URL
 import java.util.UUID
 
+import better.files.File
 import cats.effect.IO
 import com.github.cndjp.godfather.domain.cards.RenderedCards
 import com.github.cndjp.godfather.domain.elements.participants.ParticipantsElements
@@ -13,6 +14,8 @@ import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticip
 import com.github.cndjp.godfather.support.GodfatherTestSupport
 import org.jsoup.Jsoup
 import org.jsoup.select.Elements
+
+import scala.io.Source
 
 class RederUsecaseSpec extends GodfatherTestSupport {
   val mockConnpassEventRepository: ConnpassEventRepository = mock[ConnpassEventRepository]
@@ -26,11 +29,23 @@ class RederUsecaseSpec extends GodfatherTestSupport {
   )
 
   describe("#exec") {
-    describe("実行すると") {
+    describe("ファイルが既にあって実行すると") {
       it("エラーなく終了出来ること") {
         import com.github.cndjp.godfather.utils.ResourcesImplicits.testResourcesPath._
 
-        val dummyCardHTML = RenderedCards("<h1>ダミーのカードだよん</h1>")
+        val mockCardHTML = RenderedCards("<h1>ダミーのカードだよん</h1>")
+
+        mockUsecase
+          .exec(ConnpassEvent(new URL("https://cnd.connpass.com/event/dummy/")))
+          .unsafeRunSync()
+        Jsoup.parse(cardsHTML).outerHtml() shouldBe Jsoup.parse(mockCardHTML.doc).outerHtml()
+      }
+    }
+    describe("ファイルがなくて実行すると") {
+      it("エラーなく終了出来ること") {
+        val tmpDir = File.newTemporaryDirectory()
+
+        val mockCardHTML = RenderedCards("<h1>ダミーのカードだよん</h1>")
         (mockConnpassEventRepository.getEventTitle _)
           .expects(*)
           .returning(IO(ConnpassTitle("水の呼吸勉強会")))
@@ -57,13 +72,18 @@ class RederUsecaseSpec extends GodfatherTestSupport {
         (mockConnpassParticipantRepository
           .renderParticipantList(_: ConnpassTitle, _: Seq[ConnpassParticipant]))
           .expects(*, *)
-          .returning(IO(dummyCardHTML))
+          .returning(IO(mockCardHTML))
           .once()
 
         mockUsecase
-          .exec(ConnpassEvent(new URL("https://cnd.connpass.com/event/dummy/")))
+          .exec(ConnpassEvent(new URL("https://cnd.connpass.com/event/dummy/")))(tmpDir.toString())
           .unsafeRunSync()
-        Jsoup.parse(cardsHTML).outerHtml() shouldBe Jsoup.parse(dummyCardHTML.doc).outerHtml()
+        val actual = {
+          val html = Source.fromFile(s"$tmpDir/cards.html")
+          try html.mkString
+          finally html.close()
+        }
+        Jsoup.parse(actual).outerHtml() shouldBe Jsoup.parse(mockCardHTML.doc).outerHtml()
       }
     }
   }
