@@ -5,9 +5,8 @@ import java.net.URL
 import cats.effect.IO
 import com.github.cndjp.godfather.domain.event.ConnpassEvent
 import com.github.cndjp.godfather.endpoint.hc.HealthCheckEndpoint
-import com.github.cndjp.godfather.endpoint.interface.GodfatherInterface
 import com.github.cndjp.godfather.endpoint.resource.ResourceEndpoint
-import com.github.cndjp.godfather.usecase.render.RenderUsecaseImpl
+import com.github.cndjp.godfather.iface.GodfatherInterface
 import com.twitter.finagle.Http
 import com.twitter.util.Await
 import io.finch.Application
