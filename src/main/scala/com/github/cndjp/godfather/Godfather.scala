@@ -28,7 +28,7 @@ object Godfather extends TwitterServer with GodfatherInterface {
 
     renderUsecase
       .exec(ConnpassEvent(new URL(s"${eventURL()}")))
-      .handleErrorWith(e => IO(logger.error(e.getMessage)))
+      .handleErrorWith(e => IO(logger.warn(e.getMessage)))
       .unsafeRunSync()
 
     val api = Bootstrap
@@ -47,7 +47,7 @@ object Godfather extends TwitterServer with GodfatherInterface {
     }
 
     logger.info(s"Godfather Ready!! ☕️")
-    logger.info(s"Please Click it 👉 http://localhost:8080/index/html")
+    logger.info(s"Please Click it 👉 http://localhost:8080/index.html")
     Await.ready(adminHttpServer)
   }
 }
