@@ -77,38 +77,39 @@ class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                    for {
                      rSeq <- r
                      renderUnit <- IO {
-                                    var unit = Seq[String]()
-                                    unit :+= """    <div class="row align-items-center border"> """
-                                    unit :+= """        <div class="col-md-6 py-2 bg-info text-light"> """
-                                    unit :+= """            <h4 class="text-center">""" + title.value + "</h4>"
-                                    unit :+= """        </div> """
-                                    unit :+= """        <div class="col-md-6 py-2 bg-info text-light border-left"> """
-                                    unit :+= """            <h4 class="text-center">""" + title.value + "</h4>"
-                                    unit :+= """        </div> """
-                                    unit :+= """    </div> """
-                                    unit :+= """    <div class="row align-items-center border"> """
-                                    unit :+= """        <div class="col-md-2"> """
-                                    unit :+= """            <img src=" """ + item._2.imageURL + "\""
-                                    unit :+= """                 class="rounded" """
-                                    unit :+= """                 width="160" height="160" """
-                                    unit :+= """                 style="margin:20px 5px; object-fit:cover"/> """
-                                    unit :+= """        </div> """
-                                    unit :+= """        <div class="col-md-4 text-dark"> """
-                                    unit :+= """            <h2 class="text-center">""" + item._2.name + "</h2>"
-                                    unit :+= """        </div> """
-                                    unit :+= """        <div class="col-md-2 border-left"> """
-                                    unit :+= """            <img src=" """ + item._3.imageURL + "\""
-                                    unit :+= """                 class="rounded" """
-                                    unit :+= """                 width="160" height="160" """
-                                    unit :+= """                 style="margin:20px 5px; object-fit:cover"/> """
-                                    unit :+= """        </div> """
-                                    unit :+= """        <div class="col-md-4 text-dark"> """
-                                    unit :+= """            <h2 class="text-center">""" + item._3.name + "</h2>"
-                                    unit :+= """        </div> """
-                                    unit :+= """    </div> """
+                                    val unit = Seq[String](
+                                      """    <div class="row align-items-center border"> """,
+                                      """        <div class="col-md-6 py-2 bg-info text-light"> """,
+                                      """            <h4 class="text-center">""" + title.value + "</h4>",
+                                      """        </div> """,
+                                      """        <div class="col-md-6 py-2 bg-info text-light border-left"> """,
+                                      """            <h4 class="text-center">""" + title.value + "</h4>",
+                                      """        </div> """,
+                                      """    </div> """,
+                                      """    <div class="row align-items-center border"> """,
+                                      """        <div class="col-md-2"> """,
+                                      """            <img src=" """ + item._2.imageURL + "\"",
+                                      """                 class="rounded" """,
+                                      """                 width="160" height="160" """,
+                                      """                 style="margin:20px 5px; object-fit:cover"/> """,
+                                      """        </div> """,
+                                      """        <div class="col-md-4 text-dark"> """,
+                                      """            <h2 class="text-center">""" + item._2.name + "</h2>",
+                                      """        </div> """,
+                                      """        <div class="col-md-2 border-left"> """,
+                                      """            <img src=" """ + item._3.imageURL + "\"",
+                                      """                 class="rounded" """,
+                                      """                 width="160" height="160" """,
+                                      """                 style="margin:20px 5px; object-fit:cover"/> """,
+                                      """        </div> """,
+                                      """        <div class="col-md-4 text-dark"> """,
+                                      """            <h2 class="text-center">""" + item._3.name + "</h2>",
+                                      """        </div> """,
+                                      """    </div> """,
+                                    )
                                     if (item._1 % 10 == 0)
-                                      unit :+= "    <div style=\"page-break-before:always\" ></div>"
-                                    unit
+                                      unit :+ "    <div style=\"page-break-before:always\" ></div>"
+                                    else unit
                                   }
                      appendedSeq <- IO(rSeq ++ renderUnit)
                    } yield appendedSeq
