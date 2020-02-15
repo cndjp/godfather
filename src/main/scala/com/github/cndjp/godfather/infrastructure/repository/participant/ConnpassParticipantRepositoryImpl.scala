@@ -18,7 +18,7 @@ class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
   override def element2Participant(input: ParticipantsElements): IO[Seq[ConnpassParticipant]] =
     for {
       participants <- input.elems
-                       .toArray(Array[Element]())
+                       .toArray(Array.empty[Element])
                        .foldLeft(IO.pure(Seq.empty[ConnpassParticipant])) {
                          var userCounter = 0
                          (unit, elem) =>

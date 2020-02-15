@@ -82,7 +82,7 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
   private[this] def createParticipantsElements(elems: Elements): IO[ParticipantsElements] =
     for {
       result <- elems
-                 .toArray(Array[Element]())
+                 .toArray(Array.empty[Element])
                  .foldLeft(IO.pure(new Elements())) { (init, item) =>
                    for {
                      initElems <- init
