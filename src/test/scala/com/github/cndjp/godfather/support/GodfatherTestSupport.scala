@@ -26,6 +26,12 @@ trait GodfatherTestSupport
     finally mockHTMLFile.close
   }
 
+  lazy val mock31CardsHTML: String = {
+    val mockHTMLFile = Source.fromFile(s"$testResourcesPath/mock_31cards.html")
+    try mockHTMLFile.mkString
+    finally mockHTMLFile.close
+  }
+
   lazy val mockConnpassHTML: String = {
     val mockHTMLFile = Source.fromFile(s"$testResourcesPath/mock_connpass.html")
     try mockHTMLFile.mkString

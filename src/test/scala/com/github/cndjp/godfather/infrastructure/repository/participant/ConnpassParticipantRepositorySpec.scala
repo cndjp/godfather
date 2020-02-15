@@ -21,7 +21,7 @@ class ConnpassParticipantRepositorySpec extends GodfatherTestSupport {
 
   describe("#element2Participants") {
     describe("指定の形式のHTMLが入力されると、") {
-      it("想定通りのイベントタイトルが返って来ること") {
+      it("想定通りのConnpassParticipantクラスが返って来ること") {
         (mockEventScrapeAdapter.getDocument _)
           .expects(*)
           .returning(IO(Right(Jsoup.parse(mockConnpassHTML))))
@@ -120,6 +120,25 @@ class ConnpassParticipantRepositorySpec extends GodfatherTestSupport {
           .doc
 
         Jsoup.parse(actual).outerHtml() shouldBe Jsoup.parse(mockCardsHTML).outerHtml()
+      }
+    }
+
+    describe("31個のダミーなConnpassParticipantのリスト入れると") {
+      it("想定通りのHTMLが返って来ること") {
+        val actual = mockParticipantRepository
+          .renderParticipantList(
+            ConnpassTitle("水の呼吸勉強会"),
+            Seq.tabulate(31)(_ + 1).map { n =>
+              ConnpassParticipant(
+                UUID.randomUUID().toString,
+                n.toString,
+                new URL(s"https://connpass.com/user/dummy/${n.toString}.png"))
+            }
+          )
+          .unsafeRunSync()
+          .doc
+
+        Jsoup.parse(actual).outerHtml() shouldBe Jsoup.parse(mock31CardsHTML).outerHtml()
       }
     }
   }
