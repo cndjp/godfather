@@ -30,10 +30,10 @@ class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                                                 elem
                                                   .select("p.display_name a")
                                                   .attr("href"))
+                             _ <- IO(userCounter += 1)
                              appendedUnitSeq <- maybeUserDoc.fold(
                                                  e =>
                                                    for {
-                                                     _ <- IO(userCounter += 1)
                                                      _ <- IO(logger.error(e.getMessage))
                                                    } yield unitSeq,
                                                  userDoc =>
@@ -42,7 +42,6 @@ class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                                                                      ConnpassParticipant(
                                                                        displayName,
                                                                        userDoc))
-                                                     _ <- IO(userCounter += 1)
                                                      _ <- IO(logger.info(
                                                            s"${participant.name}: $userCounter / ${input.elems
                                                              .size()}"))
