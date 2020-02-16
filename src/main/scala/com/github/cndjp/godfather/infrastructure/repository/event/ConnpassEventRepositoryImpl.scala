@@ -109,11 +109,14 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                                // paginatedUserListUrlがnull、か "/ptype/" を含む文字列
                                case false =>
                                  for {
-                                   validPaginatedUserListUrl <- IO.fromEither(
-                                                                 ValidUrl.from(
-                                                                   paginatedUserListUrl))
-                                   maybePage1 <- scrapeAdapter
-                                                  .getDocument(validPaginatedUserListUrl)
+                                   maybePage1 <- ValidUrl
+                                                  .from(paginatedUserListUrl)
+                                                  .fold(
+                                                    e => IO.pure(Left(e)),
+                                                    valid =>
+                                                      scrapeAdapter
+                                                        .getDocument(valid)
+                                                  )
                                    _ <- maybePage1.fold(
                                          error => IO(logger.error(error.getMessage)),
                                          page1 =>
