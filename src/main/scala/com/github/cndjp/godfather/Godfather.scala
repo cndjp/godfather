@@ -54,13 +54,20 @@ object Godfather extends GodfatherInterface with IOApp with LazyLogging {
       }
 
     for {
-      eventURL <- initCmdParse.parse(args, Ops()).map(_.url) match {
-                   case Some(v) => IO(logger.info(s"Scrape URL: $v")) *> IO.pure(v)
-                   case None    => IO.raiseError(GodfatherParseArgsException(args.mkString(",")))
-                 }
+      rawEventURL <- initCmdParse.parse(args, Ops()).map(_.url) match {
+                      case Some(v) => IO(logger.info(s"Scrape URL: $v")) *> IO.pure(v)
+                      case None    => IO.raiseError(GodfatherParseArgsException(args.mkString(",")))
+                    }
+
+      eventURL <- ValidUrl
+                   .from(rawEventURL)
+                   .fold(
+                     e => IO.raiseError(GodfatherParseUrlException(e.getMessage)),
+                     url => IO.pure(url)
+                   )
 
       _ <- renderUsecase
-            .exec(ConnpassEvent(ValidUrl(eventURL)))
+            .exec(ConnpassEvent(eventURL))
 
       _ <- IO {
             logger.info(s"Godfather Ready!! ☕️")

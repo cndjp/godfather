@@ -24,7 +24,8 @@ class ConnpassEventRepositorySpec extends GodfatherTestSupport {
           .once()
 
         val maybeResult = mockRepository
-          .getEventTitle(ConnpassEvent(ValidUrl("https://cnd.connpass.com/event/dummy/")))
+          .getEventTitle(
+            ConnpassEvent(ValidUrl.from("https://cnd.connpass.com/event/dummy/").right.get))
           .unsafeRunSync()
 
         maybeResult shouldBe ConnpassTitle("水の呼吸勉強会")
@@ -41,7 +42,8 @@ class ConnpassEventRepositorySpec extends GodfatherTestSupport {
           .once()
 
         val actualResult = mockRepository
-          .getParticipantElements(ConnpassEvent(ValidUrl("https://cnd.connpass.com/event/dummy/")))
+          .getParticipantElements(
+            ConnpassEvent(ValidUrl.from("https://cnd.connpass.com/event/dummy/").right.get))
           .unsafeRunSync()
 
         val actualOrganizerResults =

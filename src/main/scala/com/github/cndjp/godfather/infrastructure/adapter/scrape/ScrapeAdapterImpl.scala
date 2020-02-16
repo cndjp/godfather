@@ -15,9 +15,6 @@ import org.jsoup.nodes.Document
 import scala.util.Try
 
 class ScrapeAdapterImpl extends ScrapeAdapter {
-  override def getDocument(arg: ValidUrl): IO[Either[Throwable, Document]] =
-    arg.url.fold(
-      e => IO(Left(GodfatherParseUrlException(e.getMessage))),
-      u => IO(Try(Jsoup.connect(u.toString).get).toEither)
-    )
+  override def getDocument(url: ValidUrl): IO[Either[Throwable, Document]] =
+    IO(Try(Jsoup.connect(url.toString).get).toEither)
 }

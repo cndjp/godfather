@@ -37,7 +37,7 @@ class RederUsecaseSpec extends GodfatherTestSupport {
         val mockCardHTML = RenderedCards("<h1>ダミーのカードだよん</h1>")
 
         mockUsecase
-          .exec(ConnpassEvent(ValidUrl("https://cnd.connpass.com/event/dummy/")))
+          .exec(ConnpassEvent(ValidUrl.from("https://cnd.connpass.com/event/dummy/").right.get))
           .unsafeRunSync()
         Jsoup.parse(cardsHTML).outerHtml() shouldBe Jsoup.parse(mockCardHTML.doc).outerHtml()
       }
@@ -77,7 +77,8 @@ class RederUsecaseSpec extends GodfatherTestSupport {
           .once()
 
         mockUsecase
-          .exec(ConnpassEvent(ValidUrl("https://cnd.connpass.com/event/dummy/")))(tmpDir.toString())
+          .exec(ConnpassEvent(ValidUrl.from("https://cnd.connpass.com/event/dummy/").right.get))(
+            tmpDir.toString())
           .unsafeRunSync()
         val actual = {
           val html = Source.fromFile(s"$tmpDir/cards.html")

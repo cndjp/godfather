@@ -29,35 +29,36 @@ class ConnpassParticipantRepositorySpec extends GodfatherTestSupport {
           .once()
 
         val eventResult = mockEventRepository
-          .getParticipantElements(ConnpassEvent(ValidUrl("https://cnd.connpass.com/event/dummy/")))
+          .getParticipantElements(
+            ConnpassEvent(ValidUrl.from("https://cnd.connpass.com/event/dummy/").right.get))
           .unsafeRunSync()
 
         (mockParticipantScrapeAdapter.getDocument _)
-          .expects(ValidUrl("https://connpass.com/user/tanjiro/open/"))
+          .expects(ValidUrl.from("https://connpass.com/user/tanjiro/open/").right.get)
           .returning(IO(Right(Jsoup.parse(
             """<div id="side_area"><div class="mb_20 text_center"><a class="image_link" href="https://connpass.com/user/dummy/tanjiro.png"><img src="https://connpass.com/user/dummy/tanjiro.png" width="180" height="180" title="tanjiro" alt="tanjiro"></a></div></div>"""))))
           .once()
 
         (mockParticipantScrapeAdapter.getDocument _)
-          .expects(ValidUrl("https://connpass.com/user/zenitsu/open/"))
+          .expects(ValidUrl.from("https://connpass.com/user/zenitsu/open/").right.get)
           .returning(IO(Right(Jsoup.parse(
             """<div id="side_area"><div class="mb_20 text_center"><a class="image_link" href="https://connpass.com/user/dummy/zenitsu.png"><img src="https://connpass.com/user/dummy/zenitsu.png" width="180" height="180" title="zenitsu" alt="zenitsu"></a></div>"""))))
           .once()
 
         (mockParticipantScrapeAdapter.getDocument _)
-          .expects(ValidUrl("https://connpass.com/user/ponyo/"))
+          .expects(ValidUrl.from("https://connpass.com/user/ponyo/").right.get)
           .returning(IO(Right(Jsoup.parse(
             """<div id="side_area"><div class="mb_20 text_center"><a class="image_link" href="https://connpass.com/user/dummy/ponyo.png"><img src="https://connpass.com/user/dummy/ponyo.png" width="180" height="180" title="ponyo" alt="ponyo"></a></div>"""))))
           .once()
 
         (mockParticipantScrapeAdapter.getDocument _)
-          .expects(ValidUrl("https://connpass.com/user/sousuke/"))
+          .expects(ValidUrl.from("https://connpass.com/user/sousuke/").right.get)
           .returning(IO(Right(Jsoup.parse(
             """<div id="side_area"><div class="mb_20 text_center"><a class="image_link" href="https://connpass.com/user/dummy/sousuke.png"><img src="https://connpass.com/user/dummy/sousuke.png" width="180" height="180" title="sousuke" alt="sousuke"></a></div>"""))))
           .once()
 
         (mockParticipantScrapeAdapter.getDocument _)
-          .expects(ValidUrl("https://connpass.com/user/kirby/"))
+          .expects(ValidUrl.from("https://connpass.com/user/kirby/").right.get)
           .returning(IO(Right(Jsoup.parse(
             """<div id="side_area"><div class="mb_20 text_center"><a class="image_link" href="https://connpass.com/user/dummy/kirby.png"><img src="https://connpass.com/user/dummy/kirby.png" width="180" height="180" title="kirby" alt="kirby"></a></div>"""))))
           .once()

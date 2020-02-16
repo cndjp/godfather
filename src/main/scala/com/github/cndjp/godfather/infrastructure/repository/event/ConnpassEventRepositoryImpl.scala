@@ -37,7 +37,12 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
   override def getParticipantElements(
       event: ConnpassEvent): IO[Map[ParticipantStatus, ParticipantsElements]] =
     for {
-      document <- scrapeAdapter.getDocument(event.getParticipantsListUrl).flatMap {
+//      document <- event.getParticipantsListUrl.flatMap{valid => scrapeAdapter.getDocument(valid).flatMap {
+//                   case Right(doc) => IO.pure(doc)
+//                   case Left(e)    => IO.raiseError(GodfatherRendererException(e.getMessage))
+//                 }
+      validParticipantsListUrl <- IO.fromEither(event.getParticipantsListUrl)
+      document <- scrapeAdapter.getDocument(validParticipantsListUrl).flatMap {
                    case Right(doc) => IO.pure(doc)
                    case Left(e)    => IO.raiseError(GodfatherRendererException(e.getMessage))
                  }
@@ -104,8 +109,11 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                                // paginatedUserListUrlがnull、か "/ptype/" を含む文字列
                                case false =>
                                  for {
+                                   validPaginatedUserListUrl <- IO.fromEither(
+                                                                 ValidUrl.from(
+                                                                   paginatedUserListUrl))
                                    maybePage1 <- scrapeAdapter
-                                                  .getDocument(ValidUrl(paginatedUserListUrl))
+                                                  .getDocument(validPaginatedUserListUrl)
                                    _ <- maybePage1.fold(
                                          error => IO(logger.error(error.getMessage)),
                                          page1 =>
@@ -121,9 +129,10 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                                                    .foldLeft(IO.unit) { (init, page) =>
                                                      for {
                                                        _ <- init
+                                                       pageX <- IO.fromEither(ValidUrl.from(
+                                                                 paginatedUserListUrl + "?page=" + page))
                                                        _ <- scrapeAdapter
-                                                             .getDocument(ValidUrl(
-                                                               paginatedUserListUrl + "?page=" + page))
+                                                             .getDocument(pageX)
                                                              .flatMap {
                                                                case Right(doc) =>
                                                                  IO(initElems.add(doc))

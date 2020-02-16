@@ -1,11 +1,19 @@
 package com.github.cndjp.godfather.domain.validUrl
 
 import java.net.URL
+import com.github.cndjp.godfather.exception.GodfatherException.GodfatherParseUrlException
 import scala.util.Try
 
 // 文字列からURLの変換を安全に取り出す値クラスです
-case class ValidUrl(url: Either[Throwable, URL]) extends AnyVal
+case class ValidUrl(private val url: URL) {
+  override def toString: String = this.url.toString
+}
 
 object ValidUrl {
-  def apply(maybeURL: String): ValidUrl = ValidUrl(Try(new URL(maybeURL)).toEither)
+
+  def from(maybeURL: String): Either[Throwable, ValidUrl] =
+    Try(ValidUrl(new URL(maybeURL))).toEither match {
+      case Left(e)      => Left(GodfatherParseUrlException(e.getMessage))
+      case Right(value) => Right(value)
+    }
 }
