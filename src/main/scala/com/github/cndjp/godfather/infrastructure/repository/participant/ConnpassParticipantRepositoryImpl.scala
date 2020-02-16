@@ -6,6 +6,7 @@ import com.github.cndjp.godfather.domain.elements.participants.ParticipantsEleme
 import com.github.cndjp.godfather.domain.event.ConnpassTitle
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
+import com.github.cndjp.godfather.domain.validUrl.ValidUrl
 import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 import com.typesafe.scalalogging.LazyLogging
 import org.jsoup.nodes.Element
@@ -27,9 +28,10 @@ class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                              displayName <- IO(elem.select("p.display_name a").text())
                              maybeUserDoc <- scrapeAdapter
                                               .getDocument(
-                                                elem
-                                                  .select("p.display_name a")
-                                                  .attr("href"))
+                                                ValidUrl(
+                                                  elem
+                                                    .select("p.display_name a")
+                                                    .attr("href")))
                              _ <- IO(userCounter += 1)
                              appendedUnitSeq <- maybeUserDoc.fold(
                                                  e =>

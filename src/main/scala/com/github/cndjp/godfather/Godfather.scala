@@ -11,7 +11,12 @@ import com.twitter.finagle.Http
 import io.finch.Application
 import io.finch._
 import cats.implicits._
-import com.github.cndjp.godfather.exception.GodfatherException.GodfatherParseArgsException
+import com.github.cndjp.godfather.domain.validUrl.ValidUrl
+import com.github.cndjp.godfather.exception.GodfatherException.{
+  GodfatherGeneralException,
+  GodfatherParseArgsException,
+  GodfatherParseUrlException
+}
 import com.typesafe.scalalogging.LazyLogging
 import com.twitter.util.Await
 import scopt.OptionParser
@@ -55,7 +60,7 @@ object Godfather extends GodfatherInterface with IOApp with LazyLogging {
                  }
 
       _ <- renderUsecase
-            .exec(ConnpassEvent(new URL(eventURL)))
+            .exec(ConnpassEvent(ValidUrl(eventURL)))
 
       _ <- IO {
             logger.info(s"Godfather Ready!! ☕️")

@@ -6,6 +6,9 @@ object GodfatherException {
   case class GodfatherGeneralException(why: String)
       extends GodfatherException(s"予測されないエラーが発生しました: $why")
 
+  case class GodfatherParseUrlException(why: String)
+      extends GodfatherException(s"不正なURLフォーマットです: $why")
+
   case class GodfatherRendererException(why: String)
       extends GodfatherException(s"レンダリングに失敗しました: $why")
 

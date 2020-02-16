@@ -11,6 +11,7 @@ import com.github.cndjp.godfather.domain.event.{ConnpassEvent, ConnpassTitle}
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
 import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepository
 import com.github.cndjp.godfather.domain.repository.participant.ConnpassParticipantRepository
+import com.github.cndjp.godfather.domain.validUrl.ValidUrl
 import com.github.cndjp.godfather.support.GodfatherTestSupport
 import org.jsoup.Jsoup
 import org.jsoup.select.Elements
@@ -36,7 +37,7 @@ class RederUsecaseSpec extends GodfatherTestSupport {
         val mockCardHTML = RenderedCards("<h1>ダミーのカードだよん</h1>")
 
         mockUsecase
-          .exec(ConnpassEvent(new URL("https://cnd.connpass.com/event/dummy/")))
+          .exec(ConnpassEvent(ValidUrl("https://cnd.connpass.com/event/dummy/")))
           .unsafeRunSync()
         Jsoup.parse(cardsHTML).outerHtml() shouldBe Jsoup.parse(mockCardHTML.doc).outerHtml()
       }
@@ -76,7 +77,7 @@ class RederUsecaseSpec extends GodfatherTestSupport {
           .once()
 
         mockUsecase
-          .exec(ConnpassEvent(new URL("https://cnd.connpass.com/event/dummy/")))(tmpDir.toString())
+          .exec(ConnpassEvent(ValidUrl("https://cnd.connpass.com/event/dummy/")))(tmpDir.toString())
           .unsafeRunSync()
         val actual = {
           val html = Source.fromFile(s"$tmpDir/cards.html")

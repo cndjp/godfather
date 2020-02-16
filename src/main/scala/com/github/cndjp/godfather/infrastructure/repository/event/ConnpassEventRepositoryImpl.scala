@@ -12,6 +12,7 @@ import com.github.cndjp.godfather.domain.participant.ParticipantStatus.{
   WAITLISTED
 }
 import com.github.cndjp.godfather.domain.repository.event.ConnpassEventRepository
+import com.github.cndjp.godfather.domain.validUrl.ValidUrl
 import com.github.cndjp.godfather.exception.GodfatherException.{
   GodfatherGeneralException,
   GodfatherRendererException
@@ -26,7 +27,7 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
   // イベントのタイトルを持ってくる
   override def getEventTitle(event: ConnpassEvent): IO[ConnpassTitle] =
     for {
-      result <- scrapeAdapter.getDocument(event.url.toString).flatMap {
+      result <- scrapeAdapter.getDocument(event.validUrl).flatMap {
                  case Right(doc) => IO(doc.select("meta[itemprop=name]").attr("content"))
                  case Left(e)    => IO.raiseError(GodfatherRendererException(e.getMessage))
                }
@@ -104,7 +105,7 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                                case false =>
                                  for {
                                    maybePage1 <- scrapeAdapter
-                                                  .getDocument(paginatedUserListUrl)
+                                                  .getDocument(ValidUrl(paginatedUserListUrl))
                                    _ <- maybePage1.fold(
                                          error => IO(logger.error(error.getMessage)),
                                          page1 =>
@@ -121,8 +122,8 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                                                      for {
                                                        _ <- init
                                                        _ <- scrapeAdapter
-                                                             .getDocument(
-                                                               paginatedUserListUrl + "?page=" + page)
+                                                             .getDocument(ValidUrl(
+                                                               paginatedUserListUrl + "?page=" + page))
                                                              .flatMap {
                                                                case Right(doc) =>
                                                                  IO(initElems.add(doc))
