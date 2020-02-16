@@ -18,18 +18,20 @@ import scopt.OptionParser
 
 object Godfather extends GodfatherInterface with IOApp with LazyLogging {
 
-  val healthCheckEndpoint = new HealthCheckEndpoint
-  val resourceEndpoint = new ResourceEndpoint
+  private[this] val healthCheckEndpoint = new HealthCheckEndpoint
+  private[this] val resourceEndpoint = new ResourceEndpoint
 
-  val api = Bootstrap
+  private[this] val api = Bootstrap
     .serve[Text.Plain](healthCheckEndpoint.hc)
     .serve[Application.Javascript](resourceEndpoint.createContentJS)
     .serve[Text.Html](resourceEndpoint.createContentHTML)
 
-  val server =
+  private[this] val bindAddress = "127.0.0.1:8080"
+
+  private[this] val server =
     Http.server.withAdmissionControl
       .concurrencyLimit(maxConcurrentRequests = 10, maxWaiters = 10)
-      .serve(":8080", api.toService)
+      .serve(bindAddress, api.toService)
 
   override def run(args: List[String]): IO[ExitCode] = {
     import com.github.cndjp.godfather.utils.ResourcesImplicits.mainResourcesPath._
@@ -57,7 +59,7 @@ object Godfather extends GodfatherInterface with IOApp with LazyLogging {
 
       _ <- IO {
             logger.info(s"Godfather Ready!! ☕️")
-            logger.info(s"Please Check it 👉 http://localhost:8080/index.html")
+            logger.info(s"Please Check it 👉 http://$bindAddress/index.html")
           }
 
       result <- IO(Await.ready(server)) *> IO.pure(ExitCode.Success)

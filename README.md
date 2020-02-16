@@ -20,7 +20,7 @@ $ java -jar target/scala-2.12/godfather.jar -e <Connpass Event URL>
 ...
 15:57:57.060 [main] INFO com.github.cndjp.godfather.usecase.render.RenderUsecaseImpl - Finish for rendering!!⭐️
 15:57:57.168 [main] INFO com.github.cndjp.godfather.Godfather$ - Godfather Ready!! ☕️
-15:57:57.168 [main] INFO com.github.cndjp.godfather.Godfather$ - Please Check it 👉 http://localhost:8080/index.html
+15:57:57.168 [main] INFO com.github.cndjp.godfather.Godfather$ - Please Check it 👉 http://127.0.0.1:8080/index.html
 ```
 
 2. Do Get Request This Server from Web Browser
