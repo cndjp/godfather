@@ -129,10 +129,13 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                                                    .foldLeft(IO.unit) { (init, page) =>
                                                      for {
                                                        _ <- init
-                                                       pageX <- IO.fromEither(ValidUrl.from(
-                                                                 paginatedUserListUrl + "?page=" + page))
-                                                       _ <- scrapeAdapter
-                                                             .getDocument(pageX)
+                                                       _ <- ValidUrl
+                                                             .from(paginatedUserListUrl + "?page=" + page)
+                                                             .fold(
+                                                               e => IO.pure(Left(e)),
+                                                               pageX =>
+                                                                 scrapeAdapter
+                                                                   .getDocument(pageX))
                                                              .flatMap {
                                                                case Right(doc) =>
                                                                  IO(initElems.add(doc))

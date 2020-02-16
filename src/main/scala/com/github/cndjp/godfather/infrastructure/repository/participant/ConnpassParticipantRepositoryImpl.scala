@@ -26,13 +26,16 @@ class ConnpassParticipantRepositoryImpl(scrapeAdapter: ScrapeAdapter)
                            for {
                              unitSeq <- unit
                              displayName <- IO(elem.select("p.display_name a").text())
-                             validUrl <- IO.fromEither(
-                                          ValidUrl.from(
-                                            elem
-                                              .select("p.display_name a")
-                                              .attr("href")))
-                             maybeUserDoc <- scrapeAdapter
-                                              .getDocument(validUrl)
+                             maybeUserDoc <- ValidUrl
+                                              .from(
+                                                elem
+                                                  .select("p.display_name a")
+                                                  .attr("href"))
+                                              .fold(
+                                                e => IO.pure(Left(e)),
+                                                valid =>
+                                                  scrapeAdapter
+                                                    .getDocument(valid))
                              _ <- IO(userCounter += 1)
                              appendedUnitSeq <- maybeUserDoc.fold(
                                                  e =>
