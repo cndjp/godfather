@@ -6,7 +6,7 @@ import java.util.UUID
 import cats.effect.IO
 import com.github.cndjp.godfather.domain.event.{ConnpassEvent, ConnpassTitle}
 import com.github.cndjp.godfather.domain.participant.{ConnpassParticipant, ParticipantStatus}
-import com.github.cndjp.godfather.domain.validUrl.ValidUrl
+import com.github.cndjp.godfather.domain.validUrl.{ValidUrl}
 import com.github.cndjp.godfather.infrastructure.adapter.scrape.ScrapeAdapter
 import com.github.cndjp.godfather.infrastructure.repository.event.ConnpassEventRepositoryImpl
 import com.github.cndjp.godfather.support.GodfatherTestSupport

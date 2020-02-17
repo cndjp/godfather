@@ -5,8 +5,10 @@ import com.github.cndjp.godfather.exception.GodfatherException.GodfatherParseUrl
 import scala.util.Try
 
 // 文字列からURLの変換を安全に取り出す値クラスです
-case class ValidUrl(protected val url: URL) {
-  override def toString: String = this.url.toString
+private[domain] case class RawUrl(value: URL) extends AnyVal
+
+case class ValidUrl(private val url: RawUrl) {
+  override def toString: String = this.url.value.toString
 }
 
 object ValidUrl {
@@ -14,6 +16,6 @@ object ValidUrl {
   def from(maybeURL: String): Either[Throwable, ValidUrl] =
     Try(new URL(maybeURL)).toEither match {
       case Left(e)      => Left(GodfatherParseUrlException(e.getMessage))
-      case Right(value) => Right(ValidUrl(value))
+      case Right(value) => Right(ValidUrl(RawUrl(value)))
     }
 }
