@@ -4,9 +4,10 @@ import java.net.URL
 import com.github.cndjp.godfather.exception.GodfatherException.GodfatherParseUrlException
 import scala.util.Try
 
-// 文字列からURLの変換を安全に取り出す値クラスです
-private[domain] case class RawUrl(value: URL) extends AnyVal
+// validUrlパッケージ内でしか参照できないので、ValidUrl#from経由でしかValidUrlをコンストラクトできなくします
+private[validUrl] case class RawUrl(value: URL) extends AnyVal
 
+// 文字列からURLの変換を安全に取り出す値クラスです
 case class ValidUrl(private val url: RawUrl) {
   override def toString: String = this.url.value.toString
 }
