@@ -8,6 +8,10 @@ jdk: openjdk11
 
 scala: 2.12.8
 
+env:
+  global:
+    - secure: "bARq09zUgTg6hzUAOaRJ0ntfbpWJRjuEe4zoDRMaW9uzkGE7e0ZiYVuvcb5BCJ+sUwtzke/+vtv+JBML7tpxxMJkXkEJZGZ77PdIuFRS7+h/bD6JGZQQMC2rU9JuKSc24O1qEobQa8Pj9tIvUkxp7XZDP/fKTnHtjdMBHeErs7DWFoIEVTVdovxYZGy6fHp4sI9jo5e4VC2XIA1iMWTnACudqUvFUJ4E1Gi6F9OzhbGlICbeofeHs3PnmYdqhn5Yqx9Z2FPuxh+qewadUMK2jg1dxUmHfuxfCyvrvhDMmPxrUbThZKSrGiULVoRLCPR9h5VHHhOzm28FRZRnCLqr8d1RsCHiLeeGPm7W7wv4sx7y9ir76s3tsrASwMxRTy/d0CDAZQUjI9ScYp2dIknz/OByLSzeeMrMUvKmOR1ubN/sPoxS7odls/IGQ/TDhkbOC49X9nho5y84pl7MHg1tBcdek/rT/itEEWZwj4jQ6s8lZUqgqwpPpLw0JOv782FDV73BbOc6ufH9TjtapB5PhiVnCV9tzGnGoDSSB0cgAe+6KR3vkCOvixh1adWJt3GQfsjrobqp/CWoOC19C0kUo4sweDovnT055/k1oFzvdBLYpuhXmYx/4yolBJzOIGdz/KY4meyIRa2VmR9s9RecOv4GSIjCH8jK7wRDcqxDfGI="
+
 cache:
   directories:
     - $HOME/.coursier
@@ -21,6 +25,9 @@ before_cache:
 notifications:
   email:
     on_success: never
+
+before_script:
+  - sbt -J-Dsbt.log.noformat=true dependencyTree | PROJECT_GROUP_KEY=godfather YAMORY_API_KEY="${YAMORY_API_KEY}" bash -c "$(curl -sSf -L https://localscanner.yamory.io/script/sbt)"
 
 script:
   - sbt test
