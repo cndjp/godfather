@@ -48,7 +48,7 @@ lazy val commonSettings = Seq(
 
 lazy val catsVersion = "2.0.0"
 lazy val circeVersion = "0.10.0"
-lazy val finagleVersion = "19.12.0"
+lazy val finagleVersion = "20.1.0"
 lazy val finchVersion = "0.31.0"
 lazy val macwireVersion = "2.3.1"
 
