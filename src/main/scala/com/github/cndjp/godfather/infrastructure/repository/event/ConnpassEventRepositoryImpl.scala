@@ -37,10 +37,6 @@ class ConnpassEventRepositoryImpl(scrapeAdapter: ScrapeAdapter)
   override def getParticipantElements(
       event: ConnpassEvent): IO[Map[ParticipantStatus, ParticipantsElements]] =
     for {
-//      document <- event.getParticipantsListUrl.flatMap{valid => scrapeAdapter.getDocument(valid).flatMap {
-//                   case Right(doc) => IO.pure(doc)
-//                   case Left(e)    => IO.raiseError(GodfatherRendererException(e.getMessage))
-//                 }
       validParticipantsListUrl <- IO.fromEither(event.getParticipantsListUrl)
       document <- scrapeAdapter.getDocument(validParticipantsListUrl).flatMap {
                    case Right(doc) => IO.pure(doc)
