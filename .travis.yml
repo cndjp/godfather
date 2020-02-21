@@ -11,6 +11,7 @@ scala: 2.12.8
 env:
   global:
     - secure: "bARq09zUgTg6hzUAOaRJ0ntfbpWJRjuEe4zoDRMaW9uzkGE7e0ZiYVuvcb5BCJ+sUwtzke/+vtv+JBML7tpxxMJkXkEJZGZ77PdIuFRS7+h/bD6JGZQQMC2rU9JuKSc24O1qEobQa8Pj9tIvUkxp7XZDP/fKTnHtjdMBHeErs7DWFoIEVTVdovxYZGy6fHp4sI9jo5e4VC2XIA1iMWTnACudqUvFUJ4E1Gi6F9OzhbGlICbeofeHs3PnmYdqhn5Yqx9Z2FPuxh+qewadUMK2jg1dxUmHfuxfCyvrvhDMmPxrUbThZKSrGiULVoRLCPR9h5VHHhOzm28FRZRnCLqr8d1RsCHiLeeGPm7W7wv4sx7y9ir76s3tsrASwMxRTy/d0CDAZQUjI9ScYp2dIknz/OByLSzeeMrMUvKmOR1ubN/sPoxS7odls/IGQ/TDhkbOC49X9nho5y84pl7MHg1tBcdek/rT/itEEWZwj4jQ6s8lZUqgqwpPpLw0JOv782FDV73BbOc6ufH9TjtapB5PhiVnCV9tzGnGoDSSB0cgAe+6KR3vkCOvixh1adWJt3GQfsjrobqp/CWoOC19C0kUo4sweDovnT055/k1oFzvdBLYpuhXmYx/4yolBJzOIGdz/KY4meyIRa2VmR9s9RecOv4GSIjCH8jK7wRDcqxDfGI="
+    - secure: "jyNVGr8UmzHB4xSUKov54ntFaSObG/e28uIX58/lMmfw1WP95dH/ZRCR0e+4Fm40yZPGAkKO7kIa67aMLM+9Nd/QMQy5Tc7UNJoPCUnb8Yp/PZbg3Tu9v2LQ2IWdFLs78jEciq34DRxMp1me0ZvhAEfMHVB/IZA6UW/HmgHbG1Vkl8p3FfmtTYmPZiKFOW5lASv72+tliuXAzDQvUjRa/dmi63VzvmoWaQjPKRl1QXp4y7EYvHQomZ+lG3iohAYU/Nf+tcvSUMjpFgLv3Nfe9cXjo6tfOMynaUO7Bj0wMusCoK5WFgI6cDAQOWMhGL7VV+saoUw65OItyL+zCFJA9iI7HVEdAdrPwvG0ASL6Wm7BBn2iEYljtbuKATokSlusSp+V5oRkziJASLrSm3FXSE8XramCdrG9La8WnnEedIkIMTMmzo6Wi8DSwEqmneXygA28j4LJf6HTprqhYNFr/N4GTs5qEz2fZyxOM/G6LudcsARLLu7TGA5RXpADeNrgB06qJpDvVg9NE1fO+MNaXs0rtAHscjjJu2MhXwC4L/qcKYvS5IBVh7JgCqw7sdLo+O7ErhWBba1sApmFi2XTEF3gki1GMe3oc7pQJZ7DccjnbyjBMUflBXdTgIGLAzkGlaNRKXx7//EkzHgsVbDbZ7z2+/khnIf0WeaFH/zy7sY="
 
 cache:
   directories:
@@ -28,8 +29,9 @@ notifications:
 
 before_script:
   - sbt -J-Dsbt.log.noformat=true dependencyTree | PROJECT_GROUP_KEY=godfather YAMORY_API_KEY="${YAMORY_API_KEY}" bash -c "$(curl -sSf -L https://localscanner.yamory.io/script/sbt)"
-
+  - echo ${DOCKERHUB_PASSWORD} | docker login -u cndjpintegrate --password-stdin
 script:
   - sbt test
   - sbt assembly
-  - docker build -t cndjp/godfather:latest .
+  - docker build -t cndjp/godfather:$(git rev-parse HEAD) .
+  - if [[ "${TRAVIS_BRANCH}" = "master" ]]; then docker push cndjp/godfather:$(git rev-parse HEAD); fi
